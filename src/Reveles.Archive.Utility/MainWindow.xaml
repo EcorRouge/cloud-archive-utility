@@ -5,8 +5,53 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Reveles.Archive.Utility"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Height="600" Width="800"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        Background ="Transparent"
+        AllowsTransparency="True"
+        MouseDown="MainWindow_OnMouseDown"
+        >
+  <Border CornerRadius="8">
     <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="180"/>
+        <ColumnDefinition/>
+      </Grid.ColumnDefinitions>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="40"/>
+        <RowDefinition />
+      </Grid.RowDefinitions>
 
+      <Border Background="{StaticResource MainWindowBackgroundTitleBrush}" CornerRadius="8,0,0,0">
+        <Image Source="{StaticResource WhiteLogo}" HorizontalAlignment="Left" Margin="10,5,0,5"/>
+      </Border>
+
+      <Border Grid.Row="0" Grid.Column="1" Background="{StaticResource MainWindowBackgroundTitleBrush}" CornerRadius="0,8,0,0">
+        <TextBlock Style="{StaticResource HeaderStyle}" Text="Reveles Archive Utility" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      </Border>
+
+      <Border Grid.Row="1" Grid.Column="0" Background="{StaticResource NavbarBrush}" CornerRadius="0,0,0,8">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="40"/>
+          </Grid.RowDefinitions>
+
+          <StackPanel Margin="8, 16, 0, 0">
+            <RadioButton Content="Choose file"/>
+            <RadioButton Content="Import settings" Margin="0,16,0,0"/>
+            <RadioButton Content="Import progress" Margin="0,16,0,0"/>
+            <RadioButton Content="Finish" Margin="0,16,0,0"/>
+          </StackPanel>
+
+          <Button Grid.Row="1" Width="70" Height="30">Exit</Button>
+        </Grid>
+      </Border>
+      
+      <Border Grid.Row="1" Grid.Column="1" CornerRadius="0,0,8,0" Background="White">
+
+      </Border>
     </Grid>
+  </Border>
 </Window>
