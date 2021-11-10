@@ -32,17 +32,79 @@
     </DrawingImage.Drawing>
   </DrawingImage>
 
-  <Style x:Key="HeaderStyle" TargetType="{x:Type TextBlock}">
+  <Style x:Key="HeaderStyle1" TargetType="{x:Type TextBlock}">
     <Setter Property="Foreground" Value="White"/>
     <Setter Property="FontSize" Value="22"/>
     <Setter Property="FontWeight" Value="Bold"/>
     <Setter Property="FontFamily" Value="{StaticResource GTAmericaFontFamily}"/>
   </Style>
 
-  <Style TargetType="{x:Type TextBlock}">
+  <Style x:Key="HeaderStyle2" TargetType="{x:Type TextBlock}">
     <Setter Property="Foreground" Value="{StaticResource MainWindowBackgroundTitleBrush}"/>
     <Setter Property="FontSize" Value="16"/>
     <Setter Property="FontWeight" Value="Medium"/>
     <Setter Property="FontFamily" Value="{StaticResource GTAmericaFontFamily}"/>
   </Style>
+
+  <Style TargetType="{x:Type TextBlock}">
+    <Setter Property="Foreground" Value="{StaticResource MainWindowBackgroundTitleBrush}"/>
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="FontWeight" Value="Regular" />
+    <Setter Property="FontFamily" Value="{StaticResource GTAmericaFontFamily}"/>
+  </Style>
+
+  <Style x:Key="NavItemStyle" TargetType="{x:Type RadioButton}">
+    <Setter Property="Margin" Value="0,16,0,0"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Foreground" Value="{StaticResource MainWindowBackgroundTitleBrush}"/>
+    <Setter Property="FontSize" Value="16"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="FontFamily" Value="{StaticResource GTAmericaFontFamily}"/>
+
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type RadioButton}">
+          <Grid>
+            <TextBlock Style="{StaticResource HeaderStyle2}" Foreground="{TemplateBinding Foreground}" Text="{TemplateBinding ToolTip}"/>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Foreground" Value="DarkGray"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="NavButtonStyle" TargetType="{x:Type Button}">
+    <Setter Property="Cursor" Value="Hand"/>
+
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type Button}">
+          <Grid>
+            <ContentPresenter 
+              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+              Content="{TemplateBinding Content}"
+              ContentTemplate="{TemplateBinding ContentTemplate}"
+            />
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style TargetType="TabItem" x:Key="TabItemStyle">
+    <Setter Property="Visibility" Value="Collapsed" />
+  </Style>
+
+  <Style TargetType="TabControl" x:Key="TabControlStyle">
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="ItemContainerStyle" Value="{StaticResource TabItemStyle}"/>
+  </Style>
+
+
 </ResourceDictionary>

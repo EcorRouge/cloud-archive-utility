@@ -28,7 +28,7 @@
       </Border>
 
       <Border Grid.Row="0" Grid.Column="1" Background="{StaticResource MainWindowBackgroundTitleBrush}" CornerRadius="0,8,0,0">
-        <TextBlock Style="{StaticResource HeaderStyle}" Text="Reveles Archive Utility" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <TextBlock Style="{StaticResource HeaderStyle1}" Text="Reveles Archive Utility" HorizontalAlignment="Center" VerticalAlignment="Center"/>
       </Border>
 
       <Border Grid.Row="1" Grid.Column="0" Background="{StaticResource NavbarBrush}" CornerRadius="0,0,0,8">
@@ -39,18 +39,50 @@
           </Grid.RowDefinitions>
 
           <StackPanel Margin="8, 16, 0, 0">
-            <RadioButton Content="Choose file"/>
-            <RadioButton Content="Import settings" Margin="0,16,0,0"/>
-            <RadioButton Content="Import progress" Margin="0,16,0,0"/>
-            <RadioButton Content="Finish" Margin="0,16,0,0"/>
+            <RadioButton Style="{StaticResource NavItemStyle}" ToolTip="Choose file" IsChecked="True" Tag="0"/>
+            <RadioButton Style="{StaticResource NavItemStyle}" ToolTip="Import settings" IsEnabled="False" Tag="1"/>
+            <RadioButton Style="{StaticResource NavItemStyle}" ToolTip="Import progress" IsEnabled="False" Tag="2"/>
+            <RadioButton Style="{StaticResource NavItemStyle}" ToolTip="Finish" IsEnabled="False" Tag="3"/>
           </StackPanel>
 
-          <Button Grid.Row="1" Width="70" Height="30">Exit</Button>
+          <Button Grid.Row="1" Style="{StaticResource NavButtonStyle}">Exit</Button>
         </Grid>
       </Border>
       
       <Border Grid.Row="1" Grid.Column="1" CornerRadius="0,0,8,0" Background="White">
+        <TabControl Style="{StaticResource TabControlStyle}" SelectedIndex="{Binding SelectedPageIndex}">
+          <TabItem>
+            <Grid Margin="24">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="48"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="*"/>
+              </Grid.RowDefinitions>
+              <TextBlock>Choose file for archiving:</TextBlock>
+              <TextBox Grid.Row="1"/>
+              <Button Grid.Row="2" Style="{StaticResource NavButtonStyle}" Content="Browse" />
 
+              <StackPanel Orientation="Horizontal" Grid.Row="4">
+                <TextBlock FontWeight="Bold">Total files to archive:</TextBlock>
+                <TextBlock Text="5" Margin="8,0,0,0"/>
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" Grid.Row="5">
+                <TextBlock FontWeight="Bold">Total size to archive:</TextBlock>
+                <TextBlock Text="2Gb" Margin="8,0,0,0"/>
+              </StackPanel>
+            </Grid>
+          </TabItem>
+          <TabItem>
+          </TabItem>
+          <TabItem>
+          </TabItem>
+          <TabItem>
+          </TabItem>
+        </TabControl>
       </Border>
     </Grid>
   </Border>
