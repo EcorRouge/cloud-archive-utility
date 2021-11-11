@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Reveles.Archive.Utility.ViewModels;
 
 namespace Reveles.Archive.Utility
 {
@@ -23,6 +24,8 @@ namespace Reveles.Archive.Utility
         public MainWindow()
         {
             InitializeComponent();
+
+            DataContext = new MainWindowViewModel();
         }
 
         private void MainWindow_OnMouseDown(object sender, MouseButtonEventArgs e)

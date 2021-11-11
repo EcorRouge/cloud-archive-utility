@@ -4,7 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Reveles.Archive.Utility"
+        xmlns:designvm="clr-namespace:Reveles.Archive.Utility.ViewModels.Design"
+        xmlns:converters="clr-namespace:Reveles.Archive.Utility.Converters"
         mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=designvm:MainWindowViewModelDesign, IsDesignTimeCreatable=True}"
         Height="600" Width="800"
         WindowStyle="None"
         ResizeMode="NoResize"
@@ -12,6 +15,12 @@
         AllowsTransparency="True"
         MouseDown="MainWindow_OnMouseDown"
         >
+  <Window.Resources>
+    <converters:TabIndexToBoolConverter x:Key="TabIndexToBoolConverter"/>
+    <converters:FileCountFormatter x:Key="FileCountFormatter"/>
+    <converters:FileSizeFormatter x:Key="FileSizeFormatter"/>
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+  </Window.Resources>
   <Border CornerRadius="8">
     <Grid>
       <Grid.ColumnDefinitions>
@@ -39,13 +48,32 @@
           </Grid.RowDefinitions>
 
           <StackPanel Margin="8, 16, 0, 0">
-            <RadioButton Style="{StaticResource NavItemStyle}" ToolTip="Choose file" IsChecked="True" Tag="0"/>
-            <RadioButton Style="{StaticResource NavItemStyle}" ToolTip="Import settings" IsEnabled="False" Tag="1"/>
-            <RadioButton Style="{StaticResource NavItemStyle}" ToolTip="Import progress" IsEnabled="False" Tag="2"/>
-            <RadioButton Style="{StaticResource NavItemStyle}" ToolTip="Finish" IsEnabled="False" Tag="3"/>
+            <RadioButton Style="{StaticResource NavItemStyle}" 
+                         ToolTip="Choose file" 
+                         IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=0}" 
+                         IsEnabled="{Binding CanSelectFile}"
+                         Command="{Binding SelectFileCommand}"
+                         />
+            <RadioButton Style="{StaticResource NavItemStyle}" 
+                         ToolTip="Import settings" 
+                         IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=1}" 
+                         IsEnabled="{Binding CanSelectSettings}"
+                         Command="{Binding SelectSettingsCommand}"
+                         />
+            <RadioButton Style="{StaticResource NavItemStyle}" 
+                         ToolTip="Import progress" IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=2}" 
+                         IsEnabled="{Binding CanSelectProgress}"
+                         Command="{Binding SelectProgressCommand}"
+                         />
+            <RadioButton Style="{StaticResource NavItemStyle}" 
+                         ToolTip="Finish" 
+                         IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=3}" 
+                         IsEnabled="{Binding CanSelectFinish}"
+                         Command="{Binding SelectFinishCommand}"
+                         />
           </StackPanel>
 
-          <Button Grid.Row="1" Style="{StaticResource NavButtonStyle}">Exit</Button>
+          <Button Grid.Row="1" Style="{StaticResource NavButtonStyle}" Command="{Binding ExitCommand}">Exit</Button>
         </Grid>
       </Border>
       
@@ -63,19 +91,28 @@
                 <RowDefinition Height="*"/>
               </Grid.RowDefinitions>
               <TextBlock>Choose file for archiving:</TextBlock>
-              <TextBox Grid.Row="1"/>
-              <Button Grid.Row="2" Style="{StaticResource NavButtonStyle}" Content="Browse" />
+              <TextBox Grid.Row="1" Text="{Binding FileName}" IsReadOnlyCaretVisible="True" IsReadOnly="True"/>
+              <Button Grid.Row="2" 
+                      Style="{StaticResource NavButtonStyle}" 
+                      Command="{Binding BrowseFileCommand}"
+                      IsEnabled="{Binding CanBrowseFile}"
+                      Content="Browse" />
 
               <StackPanel Orientation="Horizontal" Grid.Row="4">
                 <TextBlock FontWeight="Bold">Total files to archive:</TextBlock>
-                <TextBlock Text="5" Margin="8,0,0,0"/>
+                <TextBlock Text="{Binding TotalFilesToArchive, Converter={StaticResource FileCountFormatter}}" Margin="8,0,0,0"/>
               </StackPanel>
               <StackPanel Orientation="Horizontal" Grid.Row="5">
                 <TextBlock FontWeight="Bold">Total size to archive:</TextBlock>
-                <TextBlock Text="2Gb" Margin="8,0,0,0"/>
+                <TextBlock Text="{Binding TotalFileSizeToArchive, Converter={StaticResource FileSizeFormatter}}" Margin="8,0,0,0"/>
               </StackPanel>
 
-              <Button Grid.Row="6" Style="{StaticResource NavButtonStyle}" VerticalAlignment="Center">Continue ></Button>
+              <Button Grid.Row="6" 
+                      Style="{StaticResource NavButtonStyle}" 
+                      VerticalAlignment="Center"
+                      Visibility="{Binding CanSelectSettings, Converter={StaticResource BooleanToVisibilityConverter}}"
+                      Command="{Binding SelectSettingsCommand}"
+                      >Continue ></Button>
             </Grid>
           </TabItem>
           <TabItem>
