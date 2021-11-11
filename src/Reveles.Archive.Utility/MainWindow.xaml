@@ -74,13 +74,82 @@
                 <TextBlock FontWeight="Bold">Total size to archive:</TextBlock>
                 <TextBlock Text="2Gb" Margin="8,0,0,0"/>
               </StackPanel>
+
+              <Button Grid.Row="6" Style="{StaticResource NavButtonStyle}" VerticalAlignment="Center">Continue ></Button>
             </Grid>
           </TabItem>
           <TabItem>
+            <Grid Margin="24">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="48"/>
+              </Grid.RowDefinitions>
+              <CheckBox IsChecked="True">Delete files after upload</CheckBox>
+              <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock>Maximum files in one archive: </TextBlock>
+                <TextBox Width="50" Margin="8,0,0,0"></TextBox>
+              </StackPanel>
+              <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock>Maximum archive size, Gb: </TextBlock>
+                <TextBox Width="50" Margin="25,0,0,0"></TextBox>
+              </StackPanel>
+              <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock>Cloud provider:</TextBlock>
+                <ComboBox Width="150" Margin="19,0,0,0"></ComboBox>
+              </StackPanel>
+              <GroupBox Grid.Row="4" Header="Cloud provider settings"></GroupBox>
+
+              <Button Grid.Row="5" Style="{StaticResource NavButtonStyle}" VerticalAlignment="Center">Continue ></Button>
+            </Grid>
           </TabItem>
           <TabItem>
+            <Grid Margin="24">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="48"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="*"/>
+              </Grid.RowDefinitions>
+              <TextBlock HorizontalAlignment="Center">Archiving files</TextBlock>
+              <ProgressBar Grid.Row="1" Height="5" VerticalAlignment="Top"/>
+              <TextBlock Grid.Row="2" HorizontalAlignment="Center">Uploading archive</TextBlock>
+              <ProgressBar Grid.Row="3" Height="5" VerticalAlignment="Top"/>
+              <TextBlock Grid.Row="4" HorizontalAlignment="Center">Deleting files after upload</TextBlock>
+              <ProgressBar Grid.Row="5" Height="5" VerticalAlignment="Top"/>
+              <TextBlock Grid.Row="7" HorizontalAlignment="Center">Total Progress</TextBlock>
+              <ProgressBar Grid.Row="8" Height="5" VerticalAlignment="Top"/>
+
+              <Button Grid.Row="9" Style="{StaticResource NavButtonStyle}" VerticalAlignment="Center">Cancel</Button>
+            </Grid>
           </TabItem>
           <TabItem>
+            <Grid Margin="24">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="*"/>
+              </Grid.RowDefinitions>
+              <TextBlock Style="{StaticResource HeaderStyle2}" HorizontalAlignment="Center">
+                Archiving successfully finished
+              </TextBlock>
+              <TextBlock Grid.Row="2" HorizontalAlignment="Center">
+                Total files archived: 123456
+              </TextBlock>
+              <TextBlock Grid.Row="3" HorizontalAlignment="Center">
+                Total archive size: 123456 Tb
+              </TextBlock>
+            </Grid>
           </TabItem>
         </TabControl>
       </Border>
