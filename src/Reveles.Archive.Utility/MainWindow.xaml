@@ -125,18 +125,18 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="48"/>
               </Grid.RowDefinitions>
-              <CheckBox IsChecked="True">Delete files after upload</CheckBox>
+              <CheckBox IsChecked="{Binding DeleteFilesAfterUpload}">Delete files after upload</CheckBox>
               <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock>Maximum files in one archive: </TextBlock>
-                <TextBox Width="50" Margin="8,0,0,0"></TextBox>
+                <TextBox Width="50" Margin="8,0,0,0" Text="{Binding MaximumFiles}"/>
               </StackPanel>
               <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock>Maximum archive size, Gb: </TextBlock>
-                <TextBox Width="50" Margin="25,0,0,0"></TextBox>
+                <TextBlock>Maximum archive size, Mb: </TextBlock>
+                <TextBox Width="50" Margin="22,0,0,0" Text="{Binding MaximumArchiveSizeMb}"/>
               </StackPanel>
               <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock>Cloud provider:</TextBlock>
-                <ComboBox Width="150" Margin="19,0,0,0" ItemsSource="{Binding CloudProviders}" SelectedIndex="1"/>
+                <ComboBox Width="150" Margin="19,0,0,0" ItemsSource="{Binding CloudProviders}" SelectedIndex="{Binding SelectedProviderIndex}"/>
               </StackPanel>
               <GroupBox Grid.Row="4" Header="Cloud provider settings"></GroupBox>
 
