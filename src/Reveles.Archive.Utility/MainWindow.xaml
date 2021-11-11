@@ -136,7 +136,7 @@
               </StackPanel>
               <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock>Cloud provider:</TextBlock>
-                <ComboBox Width="150" Margin="19,0,0,0"></ComboBox>
+                <ComboBox Width="150" Margin="19,0,0,0" ItemsSource="{Binding CloudProviders}" SelectedIndex="1"/>
               </StackPanel>
               <GroupBox Grid.Row="4" Header="Cloud provider settings"></GroupBox>
 

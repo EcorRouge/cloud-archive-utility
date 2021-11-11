@@ -17,6 +17,9 @@ namespace Reveles.Archive.Utility.ViewModels.Design
 
             TotalFilesToArchive = 89898;
             TotalFileSizeToArchive = 5000091823098090;
+
+            CloudProviders.Add("Amazon S3");
+            CloudProviders.Add("External HDD");
         }
     }
 }

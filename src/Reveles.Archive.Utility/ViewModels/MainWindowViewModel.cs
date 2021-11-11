@@ -39,6 +39,14 @@ namespace Reveles.Archive.Utility.ViewModels
         public bool CanSelectProgress { get; set; } = false;
         public bool CanSelectFinish { get; set; } = false;
 
+        protected virtual void ConfigureRuntimeProperties()
+        {
+            foreach (var plugin in PluginsManager.Instance.Plugins)
+            {
+                CloudProviders.Add(plugin.ProviderName);
+            }
+        }
+
         public MainWindowViewModel()
         {
             SelectFileCommand = new RelayCommand(() =>
@@ -66,8 +74,11 @@ namespace Reveles.Archive.Utility.ViewModels
             ExitCommand = new RelayCommand(() =>
             {
                 _fileOpenCts.Cancel();
+
                 Application.Current.Shutdown(); //TODO: confirmation, cancel file loading, cancel archiving and cleanup
             });
+
+            ConfigureRuntimeProperties();
         }
     }
 }
