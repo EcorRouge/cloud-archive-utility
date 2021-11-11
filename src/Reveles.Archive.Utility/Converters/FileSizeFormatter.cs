@@ -16,6 +16,9 @@ namespace Reveles.Archive.Utility.Converters
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            if (value == null)
+                return null;
+
             double size = System.Convert.ToDouble(value);
 
             int postfix = 0;

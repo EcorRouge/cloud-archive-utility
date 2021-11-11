@@ -20,7 +20,14 @@ namespace Reveles.Archive.Utility.Converters
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            var indToCompare = parameter?.ToString();
+
+            if (value is bool && ((bool) value))
+            {
+                return indToCompare;
+            }
+
+            return null;
         }
     }
 }

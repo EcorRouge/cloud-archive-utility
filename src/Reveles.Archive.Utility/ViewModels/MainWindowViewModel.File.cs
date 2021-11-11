@@ -13,13 +13,13 @@ namespace Reveles.Archive.Utility.ViewModels
     {
         private CancellationTokenSource _fileOpenCts;
 
-        public bool CanBrowseFile { get; set; }
+        public bool CanBrowseFile { get; set; } = true;
         public bool DefFileLoading { get; set; }
 
         public void ChooseFile()
         {
             var ofd = new OpenFileDialog();
-            ofd.Filter = "*.txt|Text Files|*.*|All Files";
+            ofd.Filter = "Text Files|*.txt|All Files|*.*";
 
             if (ofd.ShowDialog() ?? false)
             {
@@ -32,6 +32,9 @@ namespace Reveles.Archive.Utility.ViewModels
                 {
                     DefFileLoading = true;
 
+                    TotalFilesToArchive = 0;
+                    TotalFileSizeToArchive = 0;
+
                     using (var reader = new StreamReader(FileName, Encoding.UTF8))
                     {
                         while (!reader.EndOfStream)
@@ -40,17 +43,29 @@ namespace Reveles.Archive.Utility.ViewModels
                             if(String.IsNullOrWhiteSpace(line))
                                 continue;
 
+                            //{file.FileName}|{file.FileLength}|{file.LastWriteTime}
+                            var parts = line.Split("|");
+                            if(parts.Length < 3)
+                                continue;
 
+                            long length = 0;
+
+                            if (Int64.TryParse(parts[1], out length))
+                            {
+                                TotalFilesToArchive++;
+                                TotalFileSizeToArchive += length;
+                            }
                         }
                     }
-                }).ContinueWith(t =>
+                }, _fileOpenCts.Token).ContinueWith(t =>
                 {
                     DefFileLoading = false;
                     CanBrowseFile = true;
+                    CanSelectSettings = TotalFilesToArchive > 0 && TotalFileSizeToArchive > 0;
 
                     if (t.Exception != null)
                     {
-
+                        CanSelectSettings = false;
                     }
                 });
             }
