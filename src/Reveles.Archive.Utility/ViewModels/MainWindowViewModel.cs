@@ -5,39 +5,81 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
-using PropertyChanged;
 
 namespace Reveles.Archive.Utility.ViewModels
 {
-    [AddINotifyPropertyChangedInterface]
-    public partial class MainWindowViewModel
+    public partial class MainWindowViewModel : ObservableObject
     {
         public const int TAB_SELECT_FILE = 0;
         public const int TAB_SETTINGS = 1;
         public const int TAB_PROGRESS = 2;
         public const int TAB_FINISH = 3;
 
+        private int _selectedPageIndex = TAB_SELECT_FILE;
+        private string _fileName;
+        private long _totalFilesInArchive;
+        private long _totalFileSizeToArchive;
+        private bool _canSelectFile = true;
+        private bool _canSelectSettings = false;
+        private bool _canSelectProgress = false;
+        private bool _canSelectFinish = false;
+
         public RelayCommand SelectFileCommand { get; set; }
         public RelayCommand SelectSettingsCommand { get; set; }
         public RelayCommand SelectProgressCommand { get; set; }
         public RelayCommand SelectFinishCommand { get; set; }
-
-        [DependsOn("CanSelectFile", new [] { "CanBrowseFile" })]
-        public RelayCommand BrowseFileCommand { get; set; }
+        
         public RelayCommand ExitCommand { get; set; }
 
-        public int SelectedPageIndex { get; set; } = TAB_SELECT_FILE;
+        public int SelectedPageIndex
+        {
+            get => _selectedPageIndex;
+            set => SetProperty(ref _selectedPageIndex, value);
+        }
 
-        public string FileName { get; set; }
+        public string FileName
+        {
+            get => _fileName;
+            set => SetProperty(ref _fileName, value);
+        }
 
-        public long TotalFilesToArchive { get; set; }
-        public long TotalFileSizeToArchive { get; set; }
+        public long TotalFilesToArchive
+        {
+            get => _totalFilesInArchive;
+            set => SetProperty(ref _totalFilesInArchive, value);
+        }
 
-        public bool CanSelectFile { get; set; } = true;
-        public bool CanSelectSettings { get; set; } = false;
-        public bool CanSelectProgress { get; set; } = false;
-        public bool CanSelectFinish { get; set; } = false;
+        public long TotalFileSizeToArchive
+        {
+            get => _totalFileSizeToArchive;
+            set => SetProperty(ref _totalFileSizeToArchive, value);
+        }
+
+        public bool CanSelectFile
+        {
+            get => _canSelectFile;
+            set => SetProperty(ref _canSelectFile, value);
+        }
+
+        public bool CanSelectSettings
+        {
+            get => _canSelectSettings;
+            set => SetProperty(ref _canSelectSettings, value);
+        }
+
+        public bool CanSelectProgress
+        {
+            get => _canSelectProgress;
+            set => SetProperty(ref _canSelectProgress, value);
+        }
+
+        public bool CanSelectFinish
+        {
+            get => _canSelectFinish;
+            set => SetProperty(ref _canSelectFinish, value);
+        }
 
         protected virtual void ConfigureRuntimeProperties()
         {
@@ -45,6 +87,8 @@ namespace Reveles.Archive.Utility.ViewModels
             {
                 CloudProviders.Add(plugin.ProviderName);
             }
+
+            SelectedProviderIndex = 0;
         }
 
         public MainWindowViewModel()
@@ -69,8 +113,6 @@ namespace Reveles.Archive.Utility.ViewModels
                 SelectedPageIndex = TAB_FINISH;
             }, () => CanSelectFinish);
 
-            BrowseFileCommand = new RelayCommand(ChooseFile, () => CanSelectFile && CanBrowseFile);
-
             ExitCommand = new RelayCommand(() =>
             {
                 _fileOpenCts.Cancel();
@@ -79,6 +121,8 @@ namespace Reveles.Archive.Utility.ViewModels
             });
 
             ConfigureRuntimeProperties();
+            InitFilePage();
+            InitSettingsPage();
         }
     }
 }

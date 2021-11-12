@@ -33,7 +33,7 @@
       </Grid.RowDefinitions>
 
       <Border Background="{StaticResource MainWindowBackgroundTitleBrush}" CornerRadius="8,0,0,0">
-        <Image Source="{StaticResource WhiteLogo}" HorizontalAlignment="Left" Margin="10,5,0,5"/>
+        <!--<Image Source="{StaticResource WhiteLogo}" HorizontalAlignment="Left" Margin="10,5,0,5"/>-->
       </Border>
 
       <Border Grid.Row="0" Grid.Column="1" Background="{StaticResource MainWindowBackgroundTitleBrush}" CornerRadius="0,8,0,0">
@@ -138,9 +138,34 @@
                 <TextBlock>Cloud provider:</TextBlock>
                 <ComboBox Width="150" Margin="19,0,0,0" ItemsSource="{Binding CloudProviders}" SelectedIndex="{Binding SelectedProviderIndex}"/>
               </StackPanel>
-              <GroupBox Grid.Row="4" Header="Cloud provider settings"></GroupBox>
+              <GroupBox Grid.Row="4" Header="Cloud provider settings">
+                <ItemsControl ItemsSource="{Binding Properties}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid Margin="5">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="150"/>
+                          <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                          <TextBlock Text="{Binding Title}"/>
+                          <TextBlock Text=":"/>
+                        </StackPanel>
+                        
+                        <TextBox Grid.Column="1" Margin="16,0,0,0" Text="{Binding Value}" VerticalAlignment="Center"/>
+                        
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </GroupBox>
 
-              <Button Grid.Row="5" Style="{StaticResource NavButtonStyle}" VerticalAlignment="Center">Continue ></Button>
+              <Button Grid.Row="5" 
+                      Style="{StaticResource NavButtonStyle}" 
+                      VerticalAlignment="Center" 
+                      IsEnabled="{Binding CanStart}"
+                      Command="{Binding StartCommand}"
+                      >START</Button>
             </Grid>
           </TabItem>
           <TabItem>

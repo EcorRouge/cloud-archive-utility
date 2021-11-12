@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Win32;
 
 namespace Reveles.Archive.Utility.ViewModels
@@ -13,8 +14,21 @@ namespace Reveles.Archive.Utility.ViewModels
     {
         private CancellationTokenSource _fileOpenCts;
 
-        public bool CanBrowseFile { get; set; } = true;
-        public bool DefFileLoading { get; set; }
+        private bool _canBrowseFile = true;
+        private bool _fileLoading;
+
+        public RelayCommand BrowseFileCommand { get; set; }
+
+        public bool CanBrowseFile
+        {
+            get => _canBrowseFile;
+            set => SetProperty(ref _canBrowseFile, value);
+        }
+
+        private void InitFilePage()
+        {
+            BrowseFileCommand = new RelayCommand(ChooseFile);
+        }
 
         public void ChooseFile()
         {
@@ -30,7 +44,7 @@ namespace Reveles.Archive.Utility.ViewModels
 
                 Task.Run(() =>
                 {
-                    DefFileLoading = true;
+                    _fileLoading = true;
 
                     TotalFilesToArchive = 0;
                     TotalFileSizeToArchive = 0;
@@ -59,7 +73,7 @@ namespace Reveles.Archive.Utility.ViewModels
                     }
                 }, _fileOpenCts.Token).ContinueWith(t =>
                 {
-                    DefFileLoading = false;
+                    _fileLoading = false;
                     CanBrowseFile = true;
                     CanSelectSettings = TotalFilesToArchive > 0 && TotalFileSizeToArchive > 0;
 

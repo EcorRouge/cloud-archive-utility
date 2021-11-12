@@ -55,6 +55,22 @@ namespace Reveles.Archive.Utility.Plugins.S3
         public override CloudProviderProperty[] Properties => PROPERTIES;
         public override bool KeepSession => true;
 
+        public override bool VerifyProperties(Dictionary<string, object> properties)
+        {
+            var requiredProps = new string[] { "aws_access_key", "aws_secret_key", "aws_region", "bucket" };
+
+            foreach (var requiredProp in requiredProps)
+            {
+                if (!properties.ContainsKey(requiredProp))
+                    return false;
+
+                if (properties[requiredProp] == null || String.IsNullOrWhiteSpace(properties[requiredProp].ToString()))
+                    return false;
+            }
+
+            return true;
+        }
+
         public override Task OpenSessionAsync(Dictionary<string, object> properties, CancellationToken cancellationToken = default)
         {
             lock (_lock)

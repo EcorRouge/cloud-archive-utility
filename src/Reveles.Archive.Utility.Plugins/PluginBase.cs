@@ -26,6 +26,7 @@ namespace Reveles.Archive.Utility.Plugins
         public abstract CloudProviderProperty[] Properties { get; }
 
         public abstract bool KeepSession { get; }
+        public abstract bool VerifyProperties(Dictionary<string, object> properties);
         public abstract Task OpenSessionAsync(Dictionary<string, object> properties, CancellationToken cancellationToken = default);
         public abstract Task CloseSessionAsync(CancellationToken cancellationToken = default);
         public abstract Task UploadFileAsync(string fileName, CancellationToken cancellationToken = default);
