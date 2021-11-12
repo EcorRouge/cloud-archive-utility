@@ -4,7 +4,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using Microsoft.Toolkit.Mvvm.Input;
+using Reveles.Archive.Utility.Converters;
 using Reveles.Archive.Utility.Plugins;
 using Reveles.Archive.Utility.Settings;
 
@@ -64,7 +66,11 @@ namespace Reveles.Archive.Utility.ViewModels
         private void InitSettingsPage()
         {
             StartCommand = new RelayCommand(StartArchiving);
-            
+
+            SelectedProviderIndex = SettingsFile.Instance.ProviderIndex;
+            DeleteFilesAfterUpload = SettingsFile.Instance.DeleteFilesAfterUpload;
+            MaximumFiles = SettingsFile.Instance.MaximumFiles;
+            MaximumArchiveSizeMb = SettingsFile.Instance.MaximumArchiveSizeMb;
         }
 
         private void FillProviderProperties()
@@ -146,6 +152,24 @@ namespace Reveles.Archive.Utility.ViewModels
                 SettingsFile.Instance.AddProviderProperty(plugin.ProviderName, value.Key, value.Value?.ToString());
             }
             SettingsFile.Instance.Save();
+
+            var size = PathHelper.GetFreeTempDriveSize();
+
+            if (size < MaximumArchiveSizeMb * 1024 * 1024)
+            {
+                var sizeStr = FileSizeFormatter.Format(size);
+
+                if (MessageBox.Show(
+                    $"There's not enough space on current drive to fit temporary archive.\nSpace remaining: {sizeStr}. Space configured: {MaximumArchiveSizeMb} Mb. Are you sure want to continue?",
+                    "Low space warning",
+                    MessageBoxButton.YesNoCancel
+                    ) != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+            }
+
+
         }
     }
 }

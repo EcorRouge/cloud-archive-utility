@@ -31,7 +31,7 @@ namespace Reveles.Archive.Utility
         {
             var repo = LogManager.GetRepository(Assembly.GetEntryAssembly());
 
-            var logsPath = PathHelper.GetRootDataPath(true);
+            var logsPath = PathHelper.GetLogsPath(true);
 
             if (!repo.Configured)
             {

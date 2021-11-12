@@ -87,8 +87,6 @@ namespace Reveles.Archive.Utility.ViewModels
             {
                 CloudProviders.Add(plugin.ProviderName);
             }
-
-            SelectedProviderIndex = 0;
         }
 
         public MainWindowViewModel()

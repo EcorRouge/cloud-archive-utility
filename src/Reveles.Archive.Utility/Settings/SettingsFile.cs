@@ -39,6 +39,14 @@ namespace Reveles.Archive.Utility.Settings
 
         public Dictionary<string, string> PreviousCredentials { get; set; }
 
+        public int ProviderIndex { get; set; }
+
+        public bool DeleteFilesAfterUpload { get; set; }
+
+        public int MaximumFiles { get; set; }
+
+        public int MaximumArchiveSizeMb { get; set; }
+
         private string MakeKey(string provider, string key)
         {
             return
@@ -75,7 +83,10 @@ namespace Reveles.Archive.Utility.Settings
         {
             return new SettingsFile()
             {
-
+                ProviderIndex = 0,
+                DeleteFilesAfterUpload = true,
+                MaximumFiles = 1000,
+                MaximumArchiveSizeMb = 2048
             };
         }
 

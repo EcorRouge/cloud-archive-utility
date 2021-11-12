@@ -14,13 +14,8 @@ namespace Reveles.Archive.Utility.Converters
             "b", "Kb", "Mb", "Gb", "Tb"
         };
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public static string Format(double size)
         {
-            if (value == null)
-                return null;
-
-            double size = System.Convert.ToDouble(value);
-
             int postfix = 0;
             while (size > 1024 && postfix < POSTFIXES.Length - 1)
             {
@@ -29,6 +24,17 @@ namespace Reveles.Archive.Utility.Converters
             }
 
             return $"{size:#.###} {POSTFIXES[postfix]}";
+        }
+
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value == null)
+                return null;
+
+            double size = System.Convert.ToDouble(value);
+
+            return Format(size);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
