@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Toolkit.Mvvm.Input;
 using Reveles.Archive.Utility.Plugins;
+using Reveles.Archive.Utility.Settings;
 
 namespace Reveles.Archive.Utility.ViewModels
 {
@@ -76,10 +77,9 @@ namespace Reveles.Archive.Utility.ViewModels
             }
             else
             {
-
                 var plugin = PluginsManager.Instance.Plugins[SelectedProviderIndex];
 
-                _properties = plugin.Properties.Select(x => new PropertyModel(x, "")).ToArray();
+                _properties = plugin.Properties.Select(x => new PropertyModel(x, SettingsFile.Instance.GetProviderProperty(plugin.ProviderName, x.Name))).ToArray();
             }
 
             SubscribeProperties();
@@ -134,7 +134,18 @@ namespace Reveles.Archive.Utility.ViewModels
 
         public void StartArchiving()
         {
+            if (SelectedProviderIndex < 0 || SelectedProviderIndex >= PluginsManager.Instance.Plugins.Count)
+                return;
+
+            var plugin = PluginsManager.Instance.Plugins[SelectedProviderIndex];
+
             var values = GetPropertyValues();
+
+            foreach (var value in values)
+            {
+                SettingsFile.Instance.AddProviderProperty(plugin.ProviderName, value.Key, value.Value?.ToString());
+            }
+            SettingsFile.Instance.Save();
         }
     }
 }
