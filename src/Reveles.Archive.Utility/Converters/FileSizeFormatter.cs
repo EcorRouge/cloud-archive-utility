@@ -23,7 +23,7 @@ namespace Reveles.Archive.Utility.Converters
                 postfix++;
             }
 
-            return $"{size:#.###} {POSTFIXES[postfix]}";
+            return $"{size:0.###} {POSTFIXES[postfix]}";
         }
 
 

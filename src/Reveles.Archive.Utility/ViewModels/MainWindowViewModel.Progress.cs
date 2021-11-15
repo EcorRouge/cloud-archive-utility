@@ -8,8 +8,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Ionic.Zip;
+using log4net.Core;
 using Microsoft.Toolkit.Mvvm.Input;
 using Reveles.Archive.Utility.Converters;
+using Reveles.Archive.Utility.Extensions;
 using Reveles.Archive.Utility.Settings;
 
 namespace Reveles.Archive.Utility.ViewModels
@@ -24,8 +26,13 @@ namespace Reveles.Archive.Utility.ViewModels
         private long _filesProcessed = 0;
         private long _bytesProcessed = 0;
 
+        private StreamWriter _skippedListFile;
+        private string _metaFileName;
+        private StreamWriter _metaFile;
         private ZipOutputStream _zipFile;
         private string _zipFileName;
+        private List<string> _archiveFileList;
+        private long _deletedFilesCount;
 
         private bool _canCancelProcess = false;
         private string _archivingLabel;
@@ -37,6 +44,7 @@ namespace Reveles.Archive.Utility.ViewModels
         private bool _deletingVisible;
 
         private double _archiveProgress = 0;
+        private double _archiveFileProgress = 0;
         private double _uploadProgress = 0;
         private double _deleteProgress = 0;
         private double _totalProgress = 0;
@@ -89,6 +97,11 @@ namespace Reveles.Archive.Utility.ViewModels
         {
             get => _archiveProgress;
             set => SetProperty(ref _archiveProgress, value);
+        }
+        public double ArchiveFileProgress
+        {
+            get => _archiveFileProgress;
+            set => SetProperty(ref _archiveFileProgress, value);
         }
         public double UploadProgress
         {
@@ -178,6 +191,7 @@ namespace Reveles.Archive.Utility.ViewModels
             UploadingVisible = false;
             DeletingVisible = false;
             ArchiveProgress = 0;
+            ArchiveFileProgress = 0;
             UploadProgress = 0;
             DeleteProgress = 0;
             TotalProgress = 0;
@@ -214,7 +228,14 @@ namespace Reveles.Archive.Utility.ViewModels
 
             ArchiveProgress = Math.Max(countProgress, sizeProgress);
 
-            TotalLabel = $"Archiving: {ArchiveProgress:N1}%, {_filesInArchive} files added, {FileSizeFormatter.Format(_zipFile.Position)} ({FileSizeFormatter.Format(_filesSizeInArchive)})";
+            ArchivingLabel = $"Archiving: {ArchiveProgress:N1}%, {_filesInArchive} files added, {FileSizeFormatter.Format(_zipFile.Position)} ({FileSizeFormatter.Format(_filesSizeInArchive)})";
+        }
+
+        private void FormatDeletingLabel()
+        {
+            DeleteProgress = _deletedFilesCount * 100.0 / _archiveFileList.Count;
+
+            DeletingLabel = $"Deleting files: {_deletedFilesCount} of {_archiveFileList.Count}";
         }
 
         private void FormatTotalLabel()
@@ -224,10 +245,23 @@ namespace Reveles.Archive.Utility.ViewModels
             TotalLabel = $"Total progress: {TotalProgress:N1}%, {FileSizeFormatter.Format(_bytesProcessed)}";
         }
 
-        private async Task ProcessFileAsync(string fileName, CancellationToken cancellationToken)
+        private void ProcessFile(string fileName, CancellationToken cancellationToken)
         {
-            //_zipFile.PutNextEntry(); //TODO: OpenZipFile();
+            if (!File.Exists(fileName))
+                throw new FileNotFoundException("File not found", fileName);
 
+            var fInfo = new FileInfo(fileName);
+
+            var guid = Guid.NewGuid();
+            var newFileName = guid + Path.GetExtension(fileName);
+
+            _metaFile.WriteLine($"{newFileName}|{fInfo.Length}|{fInfo.CreationTime.ToUnixTime()}|{fileName}");
+
+            _zipFile.PutNextEntry(newFileName);
+            WriteFileStream(fileName, fInfo.Length, cancellationToken);
+
+            _archiveFileList.Add(fileName);
+            _bytesProcessed += fInfo.Length;
         }
 
         private bool ShouldFlushZip()
@@ -237,7 +271,15 @@ namespace Reveles.Archive.Utility.ViewModels
 
         private void OpenZipFile()
         {
-            _zipFileName = Path.Combine(PathHelper.GetTempPath(), Guid.NewGuid() + ".zip");
+            var guid = Guid.NewGuid();
+
+            _archiveFileList = new List<string>();
+
+            _metaFileName = Path.Combine(PathHelper.GetTempPath(true), guid + ".txt");
+            _metaFile = new StreamWriter(_metaFileName, false, Encoding.UTF8);
+
+            _zipFileName = Path.Combine(PathHelper.GetTempPath(), guid + ".zip");
+
             _zipFile = new ZipOutputStream(_zipFileName);
             _zipFile.EnableZip64 = Zip64Option.Always;
 
@@ -247,9 +289,30 @@ namespace Reveles.Archive.Utility.ViewModels
             FormatArchiveLabel();
         }
 
+        private void WriteFileStream(string fileName, long totalSize, CancellationToken cancellationToken)
+        {
+            using var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read);
+
+            var buf = new byte[4 * 1024 * 1024];
+            int bytesRead = 0;
+            long totalBytes = 0;
+
+            while ((bytesRead = stream.Read(buf, 0, buf.Length)) > 0 && !cancellationToken.IsCancellationRequested)
+            {
+                _zipFile.Write(buf, 0, bytesRead);
+                totalBytes += bytesRead;
+
+                ArchiveFileProgress = totalBytes * 100.0 / totalSize;
+            }
+        }
+
         private async Task FlushArchive(CancellationToken cancellationToken)
         {
-            //TODO: put meta
+            _metaFile.Close();
+            await _metaFile.DisposeAsync();
+
+            _zipFile.PutNextEntry(Path.GetFileName(_metaFileName));
+            WriteFileStream(_metaFileName, new FileInfo(_metaFileName).Length, cancellationToken);
 
             _zipFile.Close();
             await _zipFile.DisposeAsync();
@@ -257,9 +320,20 @@ namespace Reveles.Archive.Utility.ViewModels
             // upload
             if (!cancellationToken.IsCancellationRequested)
             {
+                UploadingLabel = "Uploading...";
                 UploadingVisible = true;
 
+                Thread.Sleep(1000);
+            }
 
+            // delete meta file
+            try
+            {
+                File.Delete(_metaFileName);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error deleting meta file", ex);
             }
 
             // delete archive
@@ -276,6 +350,22 @@ namespace Reveles.Archive.Utility.ViewModels
                 return;
 
             // delete source files
+            _deletedFilesCount = 0;
+            DeleteProgress = 0;
+            DeletingLabel = "Deleting...";
+            DeletingVisible = true;
+
+            foreach (var fileName in _archiveFileList)
+            {
+                try
+                {
+                    File.Delete(fileName);
+                } catch (Exception) {/* ignore */}
+
+                _deletedFilesCount++;
+
+                FormatDeletingLabel();
+            }
 
             UploadingVisible = false;
             DeletingVisible = false;
@@ -287,6 +377,8 @@ namespace Reveles.Archive.Utility.ViewModels
 
             try
             {
+                _skippedListFile = new StreamWriter(Path.Combine(PathHelper.GetRootDataPath(), "skipped_files.txt"));
+
                 OpenZipFile();
 
                 using var reader = new StreamReader(_fileName);
@@ -305,10 +397,12 @@ namespace Reveles.Archive.Utility.ViewModels
 
                     try
                     {
-                        await ProcessFileAsync(parts[0], cancellationToken);
+                        ArchiveFileProgress = 0;
+                        ProcessFile(parts[0], cancellationToken);
                     }
                     catch (Exception ex)
                     {
+                        _skippedListFile.WriteLine(line);
                         log.Error("Error processing file", ex);
                     }
 
@@ -323,6 +417,9 @@ namespace Reveles.Archive.Utility.ViewModels
                         await FlushArchive(cancellationToken);
 
                         OpenZipFile();
+
+                        ArchiveProgress = 0;
+                        ArchiveFileProgress = 0;
                     }
                 }
 
@@ -334,6 +431,15 @@ namespace Reveles.Archive.Utility.ViewModels
             }
             finally
             {
+                try
+                {
+                    if (_skippedListFile != null)
+                    {
+                        _skippedListFile.Close();
+                        await _skippedListFile.DisposeAsync();
+                    }
+                } catch (Exception) {/* ignore */}
+
                 _isBusy = false;
             }
         }

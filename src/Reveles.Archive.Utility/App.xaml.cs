@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using log4net;
@@ -64,6 +65,8 @@ namespace Reveles.Archive.Utility
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // For ZipOutputStream and IBM437 encoding
 
             Log4Setup(true, false);
         }
