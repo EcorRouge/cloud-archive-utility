@@ -182,14 +182,14 @@
                 <RowDefinition Height="16"/>
                 <RowDefinition Height="*"/>
               </Grid.RowDefinitions>
-              <TextBlock HorizontalAlignment="Center">Archiving files</TextBlock>
-              <ProgressBar Grid.Row="1" Height="5" VerticalAlignment="Top"/>
-              <TextBlock Grid.Row="2" HorizontalAlignment="Center">Uploading archive</TextBlock>
-              <ProgressBar Grid.Row="3" Height="5" VerticalAlignment="Top"/>
-              <TextBlock Grid.Row="4" HorizontalAlignment="Center">Deleting files after upload</TextBlock>
-              <ProgressBar Grid.Row="5" Height="5" VerticalAlignment="Top"/>
-              <TextBlock Grid.Row="7" HorizontalAlignment="Center">Total Progress</TextBlock>
-              <ProgressBar Grid.Row="8" Height="5" VerticalAlignment="Top"/>
+              <TextBlock HorizontalAlignment="Center" Text="{Binding ArchivingLabel}"/>
+              <ProgressBar Grid.Row="1" Height="5" VerticalAlignment="Top" Maximum="100" Value="{Binding ArchiveProgress}"/>
+              <TextBlock Grid.Row="2" HorizontalAlignment="Center" Text="{Binding UploadingLabel}" Visibility="{Binding UploadingVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+              <ProgressBar Grid.Row="3" Height="5" VerticalAlignment="Top" Maximum="100" Value="{Binding UploadProgress}" Visibility="{Binding UploadingVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+              <TextBlock Grid.Row="4" HorizontalAlignment="Center" Text="{Binding DeletingLabel}" Visibility="{Binding DeletingVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+              <ProgressBar Grid.Row="5" Height="5" VerticalAlignment="Top" Maximum="100" Value="{Binding DeleteProgress}" Visibility="{Binding DeletingVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+              <TextBlock Grid.Row="7" HorizontalAlignment="Center" Text="{Binding TotalLabel}" />
+              <ProgressBar Grid.Row="8" Height="5" VerticalAlignment="Top" Maximum="100" Value="{Binding TotalProgress}"/>
 
               <Button Grid.Row="9" Style="{StaticResource NavButtonStyle}" VerticalAlignment="Center">Cancel</Button>
             </Grid>

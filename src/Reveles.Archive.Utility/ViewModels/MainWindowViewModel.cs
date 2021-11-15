@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using log4net;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 
@@ -12,6 +13,8 @@ namespace Reveles.Archive.Utility.ViewModels
 {
     public partial class MainWindowViewModel : ObservableObject
     {
+        internal static readonly ILog log = LogManager.GetLogger(typeof(MainWindowViewModel));
+
         public const int TAB_SELECT_FILE = 0;
         public const int TAB_SETTINGS = 1;
         public const int TAB_PROGRESS = 2;
@@ -19,7 +22,7 @@ namespace Reveles.Archive.Utility.ViewModels
 
         private int _selectedPageIndex = TAB_SELECT_FILE;
         private string _fileName;
-        private long _totalFilesInArchive;
+        private long _totalFilesToArchive;
         private long _totalFileSizeToArchive;
         private bool _canSelectFile = true;
         private bool _canSelectSettings = false;
@@ -47,8 +50,8 @@ namespace Reveles.Archive.Utility.ViewModels
 
         public long TotalFilesToArchive
         {
-            get => _totalFilesInArchive;
-            set => SetProperty(ref _totalFilesInArchive, value);
+            get => _totalFilesToArchive;
+            set => SetProperty(ref _totalFilesToArchive, value);
         }
 
         public long TotalFileSizeToArchive
@@ -93,23 +96,38 @@ namespace Reveles.Archive.Utility.ViewModels
         {
             SelectFileCommand = new RelayCommand(() =>
             {
+                if (_worker?.IsBusy ?? false)
+                {
+                    if (!ConfirmInterrupt())
+                    {
+                        return;
+                    }
+                }
                 SelectedPageIndex = TAB_SELECT_FILE;
             });
 
             SelectSettingsCommand = new RelayCommand(() =>
             {
+                if (_worker?.IsBusy ?? false)
+                {
+                    if (!ConfirmInterrupt())
+                    {
+                        return;
+                    }
+                }
+
                 SelectedPageIndex = TAB_SETTINGS;
             });
 
             SelectProgressCommand = new RelayCommand(() =>
             {
                 SelectedPageIndex = TAB_PROGRESS;
-            }, () => CanSelectProgress);
+            });
 
             SelectFinishCommand = new RelayCommand(() =>
             {
                 SelectedPageIndex = TAB_FINISH;
-            }, () => CanSelectFinish);
+            });
 
             ExitCommand = new RelayCommand(() =>
             {
@@ -119,8 +137,10 @@ namespace Reveles.Archive.Utility.ViewModels
             });
 
             ConfigureRuntimeProperties();
+
             InitFilePage();
             InitSettingsPage();
+            InitProgressPage();
         }
     }
 }

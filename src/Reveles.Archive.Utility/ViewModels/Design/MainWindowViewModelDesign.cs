@@ -20,6 +20,19 @@ namespace Reveles.Archive.Utility.ViewModels.Design
 
             CloudProviders.Add("Amazon S3");
             CloudProviders.Add("External HDD");
+
+            ArchivingLabel = "Archiving: 25%, 5 files added, 12Mb(50Mb)";
+            UploadingLabel = "Uploading: 37%";
+            DeletingLabel = "Deleting files: 1 of 337";
+            TotalLabel = "Total Progress: 1%, 37Mb processed";
+
+            UploadingVisible = true;
+            DeletingVisible = true;
+
+            ArchiveProgress = 25.0;
+            UploadProgress = 37.0;
+            DeleteProgress = 1.0;
+            TotalProgress = 12.0;
         }
     }
 }

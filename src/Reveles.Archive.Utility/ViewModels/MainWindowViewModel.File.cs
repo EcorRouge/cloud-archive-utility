@@ -39,6 +39,7 @@ namespace Reveles.Archive.Utility.ViewModels
             {
                 _fileOpenCts = new CancellationTokenSource();
 
+                CanSelectFinish = false;
                 CanBrowseFile = false;
                 FileName = ofd.FileName;
 

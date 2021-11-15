@@ -2,12 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using Microsoft.Toolkit.Mvvm.Input;
-using Reveles.Archive.Utility.Converters;
-using Reveles.Archive.Utility.Plugins;
 using Reveles.Archive.Utility.Settings;
 
 namespace Reveles.Archive.Utility.ViewModels
@@ -89,6 +84,8 @@ namespace Reveles.Archive.Utility.ViewModels
             }
 
             SubscribeProperties();
+
+            CanStart = CheckCanStart();
         }
 
         private void UnsubscribeProperties()
@@ -136,40 +133,6 @@ namespace Reveles.Archive.Utility.ViewModels
             var plugin = PluginsManager.Instance.Plugins[SelectedProviderIndex];
 
             return plugin.VerifyProperties(GetPropertyValues());
-        }
-
-        public void StartArchiving()
-        {
-            if (SelectedProviderIndex < 0 || SelectedProviderIndex >= PluginsManager.Instance.Plugins.Count)
-                return;
-
-            var plugin = PluginsManager.Instance.Plugins[SelectedProviderIndex];
-
-            var values = GetPropertyValues();
-
-            foreach (var value in values)
-            {
-                SettingsFile.Instance.AddProviderProperty(plugin.ProviderName, value.Key, value.Value?.ToString());
-            }
-            SettingsFile.Instance.Save();
-
-            var size = PathHelper.GetFreeTempDriveSize();
-
-            if (size < MaximumArchiveSizeMb * 1024 * 1024)
-            {
-                var sizeStr = FileSizeFormatter.Format(size);
-
-                if (MessageBox.Show(
-                    $"There's not enough space on current drive to fit temporary archive.\nSpace remaining: {sizeStr}. Space configured: {MaximumArchiveSizeMb} Mb. Are you sure want to continue?",
-                    "Low space warning",
-                    MessageBoxButton.YesNoCancel
-                    ) != MessageBoxResult.Yes)
-                {
-                    return;
-                }
-            }
-
-
         }
     }
 }

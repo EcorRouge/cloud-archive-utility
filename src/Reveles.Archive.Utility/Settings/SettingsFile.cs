@@ -13,8 +13,6 @@ namespace Reveles.Archive.Utility.Settings
     {
         internal static readonly ILog log = LogManager.GetLogger(typeof(SettingsFile));
 
-        protected static SettingsFile _default;
-
         private static SettingsFile _instance = null;
         private static object _instanceLock = new object();
 
@@ -26,7 +24,7 @@ namespace Reveles.Archive.Utility.Settings
                 {
                     if (_instance == null)
                     {
-                        _instance = _default.Load();
+                        _instance = Load();
                     }
 
                     return _instance;
@@ -57,6 +55,11 @@ namespace Reveles.Archive.Utility.Settings
         {
             var dictionaryKey = MakeKey(provider, key);
 
+            if (PreviousCredentials == null)
+            {
+                PreviousCredentials = new Dictionary<string, string>();
+            }
+
             if (String.IsNullOrWhiteSpace(value))
             {
                 PreviousCredentials.Remove(dictionaryKey);
@@ -71,7 +74,7 @@ namespace Reveles.Archive.Utility.Settings
         {
             var dictionaryKey = MakeKey(provider, key);
 
-            if (PreviousCredentials.ContainsKey(dictionaryKey))
+            if (PreviousCredentials?.ContainsKey(dictionaryKey) ?? false)
             {
                 return StringProtection.DecryptString(PreviousCredentials[dictionaryKey]);
             }
@@ -79,18 +82,19 @@ namespace Reveles.Archive.Utility.Settings
             return defaultValue;
         }
 
-        private SettingsFile CreateEmptySettings()
+        private static SettingsFile CreateEmptySettings()
         {
             return new SettingsFile()
             {
                 ProviderIndex = 0,
                 DeleteFilesAfterUpload = true,
                 MaximumFiles = 1000,
-                MaximumArchiveSizeMb = 2048
+                MaximumArchiveSizeMb = 2048,
+                PreviousCredentials = new Dictionary<string, string>()
             };
         }
 
-        protected SettingsFile Load()
+        private static SettingsFile Load()
         {
             var rootPath = PathHelper.GetRootDataPath(true);
 
