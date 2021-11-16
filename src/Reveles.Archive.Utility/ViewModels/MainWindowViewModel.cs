@@ -96,7 +96,7 @@ namespace Reveles.Archive.Utility.ViewModels
         {
             SelectFileCommand = new RelayCommand(() =>
             {
-                if (_isBusy)
+                if (_worker?.IsBusy ?? false)
                 {
                     if (!ConfirmInterrupt())
                     {
@@ -108,7 +108,7 @@ namespace Reveles.Archive.Utility.ViewModels
 
             SelectSettingsCommand = new RelayCommand(() =>
             {
-                if (_isBusy)
+                if (_worker?.IsBusy ?? false)
                 {
                     if (!ConfirmInterrupt())
                     {
