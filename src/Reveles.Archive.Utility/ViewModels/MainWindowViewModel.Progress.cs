@@ -250,6 +250,9 @@ namespace Reveles.Archive.Utility.ViewModels
             CanSelectProgress = false;
             CanSelectFinish = true;
 
+            TotalCompletedFilesLabel = $"Total files processed: {_worker.FilesProcessed}";
+            TotalCompletedBytesLabel = $"Total bytes processed: {FileSizeFormatter.Format(_worker.BytesProcessed)}";
+
             SelectedPageIndex = TAB_FINISH;
         }
 

@@ -207,12 +207,8 @@
               <TextBlock Style="{StaticResource HeaderStyle2}" HorizontalAlignment="Center">
                 Archiving successfully finished
               </TextBlock>
-              <TextBlock Grid.Row="2" HorizontalAlignment="Center">
-                Total files archived: 123456
-              </TextBlock>
-              <TextBlock Grid.Row="3" HorizontalAlignment="Center">
-                Total archive size: 123456 Tb
-              </TextBlock>
+              <TextBlock Grid.Row="2" HorizontalAlignment="Center" Text="{Binding TotalCompletedFilesLabel}"/>
+              <TextBlock Grid.Row="3" HorizontalAlignment="Center" Text="{Binding TotalCompletedBytesLabel}"/>
             </Grid>
           </TabItem>
         </TabControl>
