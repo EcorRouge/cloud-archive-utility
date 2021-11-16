@@ -76,7 +76,7 @@ namespace Reveles.Archive.Utility.Plugins.S3
             lock (_lock)
             {
                 _client = new AmazonS3Client(properties["aws_access_key"].ToString(),
-                    properties["aws_access_key"].ToString(),
+                    properties["aws_secret_key"].ToString(),
                     RegionEndpoint.GetBySystemName(properties["aws_region"].ToString()));
 
                 _bucket = properties["bucket"].ToString();
