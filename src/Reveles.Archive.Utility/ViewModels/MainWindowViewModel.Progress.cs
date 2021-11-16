@@ -186,6 +186,7 @@ namespace Reveles.Archive.Utility.ViewModels
             _worker.Completed += ArchiveWorker_Completed;
             _worker.ArchivingProgress += ArchiveWorker_ArchivingProgress;
             _worker.DeletingProgress += ArchiveWorker_DeletingProgress;
+            _worker.UploadingProgress += ArchiveWorker_UploadingProgress;
             _worker.Start();
         }
 
@@ -212,6 +213,14 @@ namespace Reveles.Archive.Utility.ViewModels
                 case ArchiverState.Completed:
                     break;
             }
+        }
+
+        private void ArchiveWorker_UploadingProgress(object? sender, EventArgs e)
+        {
+            UploadProgress = _worker.UploadProgress;
+            UploadingLabel = $"Uploading archive: {UploadProgress:N1}% ({FileSizeFormatter.Format(_worker.BytesUploaded)})";
+
+            FormatTotalLabel();
         }
 
         private void ArchiveWorker_DeletingProgress(object? sender, EventArgs e)

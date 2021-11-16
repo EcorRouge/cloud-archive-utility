@@ -33,12 +33,14 @@ namespace Reveles.Archive.Utility
         private int _maximumArchiveSizeMb;
 
         private CancellationTokenSource _cts;
-        private bool _isBusy;
 
         private long _filesInArchive = 0;
         private long _filesSizeInArchive = 0;
         private long _filesProcessed = 0;
         private long _bytesProcessed = 0;
+
+        private long _bytesUploaded = 0;
+        private double _uploadProgress = 0;
 
         private StreamWriter _skippedListFile;
         private string _metaFileName;
@@ -50,6 +52,7 @@ namespace Reveles.Archive.Utility
 
         public EventHandler Completed;
         public EventHandler ArchivingProgress;
+        public EventHandler UploadingProgress;
         public EventHandler DeletingProgress;
         public EventHandler StateChanged;
 
@@ -61,6 +64,8 @@ namespace Reveles.Archive.Utility
         public long DeletedFilesCount => _deletedFilesCount;
         public long FilesProcessed => _filesProcessed;
         public long BytesProcessed => _bytesProcessed;
+        public long BytesUploaded => _bytesUploaded;
+        public double UploadProgress => _uploadProgress;
 
         public double ArchiveFileProgress { get; private set; }
 
@@ -73,6 +78,36 @@ namespace Reveles.Archive.Utility
             this._pluginProperties = pluginProperties;
             this._maximumFiles = maximumFiles;
             this._maximumArchiveSizeMb = maximumArchiveSizeMb;
+
+            _plugin.OnLogMessage += ArchiverPlugin_OnLogMessage;
+            _plugin.OnUploadProgress += ArchiverPlugin_OnUploadProgress;
+        }
+
+        private void ArchiverPlugin_OnUploadProgress(long bytesUploaded, double percentUploaded)
+        {
+            _bytesUploaded = bytesUploaded;
+            _uploadProgress = percentUploaded;
+
+            UploadingProgress?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void ArchiverPlugin_OnLogMessage(LogLevel level, string message)
+        {
+            switch (level)
+            {
+                case LogLevel.Error:
+                    log.Error(message);
+                    break;
+                case LogLevel.Info:
+                    log.Info(message);
+                    break;
+                case LogLevel.Warn:
+                    log.Warn(message);
+                    break;
+                default:
+                    log.Debug(message);
+                    break;
+            }
         }
 
         public void Cancel()
@@ -116,13 +151,18 @@ namespace Reveles.Archive.Utility
 
         private async Task DoWork(CancellationToken cancellationToken)
         {
-            _isBusy = true;
+            IsBusy = true;
 
             ChangeState(ArchiverState.Initializing);
                 
             try
             {
                 _skippedListFile = new StreamWriter(Path.Combine(PathHelper.GetRootDataPath(), "skipped_files.txt"));
+
+                if (_plugin.KeepSession)
+                {
+                    await _plugin.OpenSessionAsync(_pluginProperties, cancellationToken);
+                }
 
                 OpenZipFile();
 
@@ -177,6 +217,15 @@ namespace Reveles.Archive.Utility
             }
             finally
             {
+                if (_plugin.KeepSession)
+                {
+                    try
+                    {
+                        await _plugin.CloseSessionAsync(cancellationToken);
+                    }
+                    catch (Exception) {/* ignore */}
+                }
+
                 try
                 {
                     if (_skippedListFile != null)
@@ -188,7 +237,7 @@ namespace Reveles.Archive.Utility
                 catch (Exception) {/* ignore */}
 
                 ChangeState(ArchiverState.Completed);
-                _isBusy = false;
+                IsBusy = false;
             }
         }
 
@@ -270,7 +319,22 @@ namespace Reveles.Archive.Utility
             // upload
             if (!cancellationToken.IsCancellationRequested)
             {
-                Thread.Sleep(1000);
+                if (!_plugin.KeepSession)
+                {
+                    await _plugin.OpenSessionAsync(_pluginProperties, cancellationToken);
+                }
+
+                try
+                {
+                    await _plugin.UploadFileAsync(_zipFileName, cancellationToken);
+                }
+                finally
+                {
+                    if (!_plugin.KeepSession)
+                    {
+                        await _plugin.CloseSessionAsync(cancellationToken);
+                    }
+                }
             }
 
             // delete meta file
