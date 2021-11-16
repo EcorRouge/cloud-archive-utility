@@ -2,6 +2,7 @@
 bin/
 obj/
 build/
+deploy/
 
 *.suo
 *.csproj.user

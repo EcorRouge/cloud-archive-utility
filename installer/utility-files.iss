@@ -1,0 +1,17 @@
+Source: "..\build\net5.0-windows\publish\DotNetZip.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\log4net.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\McMaster.NETCore.Plugins.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\Microsoft.DotNet.PlatformAbstractions.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\Microsoft.Extensions.DependencyModel.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\Microsoft.Toolkit.Mvvm.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\Reveles.Archive.Utility.deps.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\Reveles.Archive.Utility.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\Reveles.Archive.Utility.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\Reveles.Archive.Utility.Plugins.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\Reveles.Archive.Utility.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\plugins\Reveles.Archive.Utility.Plugins.S3\AWSSDK.Core.dll"; DestDir: "{app}\plugins\Reveles.Archive.Utility.Plugins.S3"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\plugins\Reveles.Archive.Utility.Plugins.S3\AWSSDK.S3.dll"; DestDir: "{app}\plugins\Reveles.Archive.Utility.Plugins.S3"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\plugins\Reveles.Archive.Utility.Plugins.S3\Reveles.Archive.Utility.Plugins.dll"; DestDir: "{app}\plugins\Reveles.Archive.Utility.Plugins.S3"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\plugins\Reveles.Archive.Utility.Plugins.S3\Reveles.Archive.Utility.Plugins.S3.deps.json"; DestDir: "{app}\plugins\Reveles.Archive.Utility.Plugins.S3"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\plugins\Reveles.Archive.Utility.Plugins.S3\Reveles.Archive.Utility.Plugins.S3.dll"; DestDir: "{app}\plugins\Reveles.Archive.Utility.Plugins.S3"; Flags: ignoreversion

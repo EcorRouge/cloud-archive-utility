@@ -43,7 +43,7 @@ for /f "tokens=*" %%a in (
 ) 
 for /l %%a in (1,1,100) do if "%OLD_VERSION:~-1%"==" " set OLD_VERSION=%OLD_VERSION:~0,-1%
 
-echo Previous version=%OLD_VERSION%.
+echo Previous version=%OLD_VERSION%
 
 if "%NEW_VERSION%" == "" (
   for /f "tokens=1-5* delims=." %%a in ("%OLD_VERSION%") do (
@@ -61,20 +61,21 @@ mkdir deploy
 
 powershell -Command "(Get-Content src\Reveles.Archive.Utility\Reveles.Archive.Utility.csproj -Raw) -replace '%OLD_VERSION%','%NEW_VERSION%' | Out-File -encoding UTF8 src\Reveles.Archive.Utility\Reveles.Archive.Utility.csproj"
 
-dotnet build
-dotnet publish
+dotnet publish -c Release src\Reveles.Archive.Utility.sln
 
 if not "%SIGNTOOL%" == "" (
-  echo "%SIGNTOOL%" sign %SIGNTOOL_ARGS% build\net5.0\publish\Reveles.Archive.Utility.exe
-  "%SIGNTOOL%" sign %SIGNTOOL_ARGS% build\net5.0\publish\Reveles.Archive.Utility.exe
+  echo "%SIGNTOOL%" sign %SIGNTOOL_ARGS% build\net5.0-windows\publish\Reveles.Archive.Utility.exe
+  "%SIGNTOOL%" sign %SIGNTOOL_ARGS% build\net5.0-windows\publish\Reveles.Archive.Utility.exe
 )
 
-cd build/net5.0
-xcopy /s /i /y ..\net5.0-windows\* .
-mkdir plugins
-xcopy /s /i /y ..\..\plugins\* plugins\
-%ZIP_PATH% a -r ..\..\deploy\collector-%NEW_VERSION%.zip *.*
-cd ..\..\
+rmdir /s /q build\net5.0-windows\publish\plugins
+mkdir build\net5.0-windows\publish\plugins\Reveles.Archive.Utility.Plugins.S3
+
+xcopy /y build\plugins\Reveles.Archive.Utility.Plugins.S3\net5.0\publish\* build\net5.0-windows\publish\plugins\Reveles.Archive.Utility.Plugins.S3\
+
+pushd build\net5.0-windows\publish
+%ZIP_PATH% a -r ..\..\..\deploy\archive-utility-%NEW_VERSION%.zip *.*
+popd
 
 %OPENSSL_PATH% dgst -md5 -binary deploy/archive-utility-%NEW_VERSION%.zip | %OPENSSL_PATH% enc -base64 > deploy/archive-utility-%NEW_VERSION%.md5
 
