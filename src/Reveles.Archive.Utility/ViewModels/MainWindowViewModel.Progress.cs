@@ -217,10 +217,17 @@ namespace Reveles.Archive.Utility.ViewModels
 
         private void ArchiveWorker_UploadingProgress(object? sender, EventArgs e)
         {
-            UploadProgress = _worker.UploadProgress;
-            UploadingLabel = $"Uploading archive: {UploadProgress:N1}% ({FileSizeFormatter.Format(_worker.BytesUploaded)})";
+            if (_worker.State == ArchiverState.UploadWaiting)
+            {
+                UploadingLabel = $"Uploading archive: {_worker.SecondsBeforeRetry} seconds left before next attempt...";
+            }
+            else
+            {
+                UploadProgress = _worker.UploadProgress;
+                UploadingLabel = $"Uploading archive: {UploadProgress:N1}% ({FileSizeFormatter.Format(_worker.BytesUploaded)})";
 
-            FormatTotalLabel();
+                FormatTotalLabel();
+            }
         }
 
         private void ArchiveWorker_DeletingProgress(object? sender, EventArgs e)

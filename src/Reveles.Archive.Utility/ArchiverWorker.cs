@@ -18,6 +18,7 @@ namespace Reveles.Archive.Utility
         Initializing,
         Archiving,
         Uploading,
+        UploadWaiting,
         Deleting,
         Completed
     }
@@ -25,6 +26,8 @@ namespace Reveles.Archive.Utility
     public class ArchiverWorker
     {
         internal static readonly ILog log = LogManager.GetLogger(typeof(ArchiverWorker));
+
+        private const int MAX_WAIT_TIME = 60;
 
         private string _fileName;
         private PluginBase _plugin;
@@ -66,6 +69,8 @@ namespace Reveles.Archive.Utility
         public long BytesProcessed => _bytesProcessed;
         public long BytesUploaded => _bytesUploaded;
         public double UploadProgress => _uploadProgress;
+
+        public int SecondsBeforeRetry { get; set; }
 
         public double ArchiveFileProgress { get; private set; }
 
@@ -303,6 +308,64 @@ namespace Reveles.Archive.Utility
             }
         }
 
+        private async Task UploadArchiveWithRetries(CancellationToken cancellationToken)
+        {
+            int retryAttempts = 0;
+
+            bool success = false;
+            while (!cancellationToken.IsCancellationRequested && !success)
+            {
+                if (retryAttempts > 0)
+                {
+                    SecondsBeforeRetry = retryAttempts * 5;
+                    if (SecondsBeforeRetry > MAX_WAIT_TIME)
+                        SecondsBeforeRetry = MAX_WAIT_TIME;
+                    
+                    ChangeState(ArchiverState.UploadWaiting);
+                    while (SecondsBeforeRetry > 0 && !cancellationToken.IsCancellationRequested)
+                    {
+                        SecondsBeforeRetry--;
+                        UploadingProgress?.Invoke(this, EventArgs.Empty);
+                        Thread.Sleep(1000);
+                    }
+                }
+
+                if(cancellationToken.IsCancellationRequested)
+                    return;
+
+                ChangeState(ArchiverState.Uploading);
+
+                try
+                {
+                    if (!_plugin.KeepSession)
+                    {
+                        await _plugin.OpenSessionAsync(_pluginProperties, cancellationToken);
+                    }
+
+                    try
+                    {
+                        await _plugin.UploadFileAsync(_zipFileName, cancellationToken);
+                        success = true;
+                    }
+                    finally
+                    {
+                        if (!_plugin.KeepSession)
+                        {
+                            await _plugin.CloseSessionAsync(cancellationToken);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (!success) // let's ignore errors in close session
+                    {
+                        log.Error("Error uploading archive", ex);
+                        retryAttempts++;
+                    }
+                }
+            }
+        }
+
         private async Task FlushArchive(CancellationToken cancellationToken)
         {
             _metaFile.Close();
@@ -314,27 +377,10 @@ namespace Reveles.Archive.Utility
             _zipFile.Close();
             await _zipFile.DisposeAsync();
 
-            ChangeState(ArchiverState.Uploading);
-
             // upload
             if (!cancellationToken.IsCancellationRequested)
             {
-                if (!_plugin.KeepSession)
-                {
-                    await _plugin.OpenSessionAsync(_pluginProperties, cancellationToken);
-                }
-
-                try
-                {
-                    await _plugin.UploadFileAsync(_zipFileName, cancellationToken);
-                }
-                finally
-                {
-                    if (!_plugin.KeepSession)
-                    {
-                        await _plugin.CloseSessionAsync(cancellationToken);
-                    }
-                }
+                await UploadArchiveWithRetries(cancellationToken);
             }
 
             // delete meta file
