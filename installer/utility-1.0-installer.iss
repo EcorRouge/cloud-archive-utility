@@ -22,7 +22,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={pf}\{#MyAppPublisher}\Archive Utility
+DefaultDirName={pf}\{#MyAppName}
 DisableDirPage=no
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=no
@@ -36,8 +36,11 @@ ArchitecturesAllowed=x64
 LicenseFile=eula.rtf
 
 [Icons]
-Name: "{group}\Reveles Archive Utility"; Filename: "{app}\Reveles.Archive.Utility.exe"; WorkingDir: "{app}"; Flags: 
+Name: "{group}\Reveles Archive Utility"; Filename: "{app}\Reveles.Archive.Utility.exe"; WorkingDir: "{app}";
 Name: "{group}\Uninstall Reveles Archive Utility"; Filename: "{uninstallexe}"
+
+[Run]
+Filename: "{app}\Reveles.Archive.Utility.exe"; Description: "Run Archive Utility"; Flags: nowait postinstall skipifsilent
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

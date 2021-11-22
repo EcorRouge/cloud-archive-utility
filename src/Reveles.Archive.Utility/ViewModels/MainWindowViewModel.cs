@@ -131,7 +131,7 @@ namespace Reveles.Archive.Utility.ViewModels
 
             ExitCommand = new RelayCommand(() =>
             {
-                _fileOpenCts.Cancel();
+                _fileOpenCts?.Cancel();
 
                 Application.Current.Shutdown(); //TODO: confirmation, cancel file loading, cancel archiving and cleanup
             });
