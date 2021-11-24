@@ -37,7 +37,7 @@ IF NOT EXIST %OPENSSL_PATH% (
 )
 
 for /f "tokens=*" %%a in ( 
-  'powershell -NoP -C "if([string](Get-Content src\Reveles.Archive.Utility\Reveles.Archive.Utility.csproj) -match '<Version>(\d+.\d+.\d+.\d+)</Version>'){$Matches[1]}"'
+  'powershell -NoP -C "if([string](Get-Content src\EcorRouge.Archive.Utility\EcorRouge.Archive.Utility.csproj) -match '<Version>(\d+.\d+.\d+.\d+)</Version>'){$Matches[1]}"'
 ) do ( 
   set OLD_VERSION=%%a 
 ) 
@@ -59,19 +59,19 @@ rmdir /s /q build
 rmdir /s /q deploy
 mkdir deploy
 
-powershell -Command "(Get-Content src\Reveles.Archive.Utility\Reveles.Archive.Utility.csproj -Raw) -replace '%OLD_VERSION%','%NEW_VERSION%' | Out-File -encoding UTF8 src\Reveles.Archive.Utility\Reveles.Archive.Utility.csproj"
+powershell -Command "(Get-Content src\EcorRouge.Archive.Utility\EcorRouge.Archive.Utility.csproj -Raw) -replace '%OLD_VERSION%','%NEW_VERSION%' | Out-File -encoding UTF8 src\EcorRouge.Archive.Utility\EcorRouge.Archive.Utility.csproj"
 
-dotnet publish -c Release src\Reveles.Archive.Utility.sln
+dotnet publish -c Release src\EcorRouge.Archive.Utility.sln
 
 if not "%SIGNTOOL%" == "" (
-  echo "%SIGNTOOL%" sign %SIGNTOOL_ARGS% build\net5.0-windows\publish\Reveles.Archive.Utility.exe
-  "%SIGNTOOL%" sign %SIGNTOOL_ARGS% build\net5.0-windows\publish\Reveles.Archive.Utility.exe
+  echo "%SIGNTOOL%" sign %SIGNTOOL_ARGS% build\net5.0-windows\publish\EcorRouge.Archive.Utility.exe
+  "%SIGNTOOL%" sign %SIGNTOOL_ARGS% build\net5.0-windows\publish\EcorRouge.Archive.Utility.exe
 )
 
 rmdir /s /q build\net5.0-windows\publish\plugins
-mkdir build\net5.0-windows\publish\plugins\Reveles.Archive.Utility.Plugins.S3
+mkdir build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.S3
 
-xcopy /y build\plugins\Reveles.Archive.Utility.Plugins.S3\net5.0\publish\* build\net5.0-windows\publish\plugins\Reveles.Archive.Utility.Plugins.S3\
+xcopy /y build\plugins\EcorRouge.Archive.Utility.Plugins.S3\net5.0\publish\* build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.S3\
 
 pushd build\net5.0-windows\publish
 %ZIP_PATH% a -r ..\..\..\deploy\archive-utility-%NEW_VERSION%.zip *.*
