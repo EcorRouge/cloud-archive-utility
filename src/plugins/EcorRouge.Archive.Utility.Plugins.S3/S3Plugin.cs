@@ -140,7 +140,7 @@ namespace EcorRouge.Archive.Utility.Plugins.S3
                 StorageClass = S3StorageClass.StandardInfrequentAccess,
                 PartSize = PART_SIZE,
                 Key = keyPath,
-                CannedACL = S3CannedACL.PublicRead
+                //CannedACL = S3CannedACL.NoACL
             };
 
             fileTransferUtilityRequest.UploadProgressEvent += FileTransferUtilityRequest_UploadProgressEvent;

@@ -122,7 +122,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             if (_properties == null)
                 return new Dictionary<string, object>();
 
-            return _properties.ToDictionary(x => x.Name, x => (object)x.Value.Trim());
+            return _properties.ToDictionary(x => x.Name, x => (object)x.Value?.Trim());
         }
 
         private bool CheckCanStart()

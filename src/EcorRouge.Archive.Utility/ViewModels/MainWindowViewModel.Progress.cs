@@ -259,6 +259,12 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
         private void ArchiveWorker_Completed(object? sender, EventArgs e)
         {
+            _worker.StateChanged -= ArchiverWorker_StateChanged;
+            _worker.Completed -= ArchiveWorker_Completed;
+            _worker.ArchivingProgress -= ArchiveWorker_ArchivingProgress;
+            _worker.DeletingProgress -= ArchiveWorker_DeletingProgress;
+            _worker.UploadingProgress -= ArchiveWorker_UploadingProgress;
+
             if (_worker.State == ArchiverState.ErrorStarting)
                 return;
 
