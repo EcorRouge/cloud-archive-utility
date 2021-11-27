@@ -100,12 +100,12 @@ namespace EcorRouge.Archive.Utility.Plugins.S3
                 //LogDebug("Using aws bucket: '" + properties["bucket"] + "'");
                 //LogDebug("Using aws prefix: '" + properties["prefix"] + "'");
 
-                _client = new AmazonS3Client(properties["aws_access_key"].ToString(),
-                    properties["aws_secret_key"].ToString(),
-                    RegionEndpoint.GetBySystemName(properties["aws_region"].ToString()));
+                _client = new AmazonS3Client(properties["aws_access_key"]?.ToString(),
+                    properties["aws_secret_key"]?.ToString(),
+                    RegionEndpoint.GetBySystemName(properties["aws_region"]?.ToString()));
 
-                _bucket = properties["bucket"].ToString();
-                _prefix = properties["prefix"].ToString();
+                _bucket = properties["bucket"]?.ToString() ?? "";
+                _prefix = properties["prefix"]?.ToString() ?? "";
             }
 
             return Task.CompletedTask;
