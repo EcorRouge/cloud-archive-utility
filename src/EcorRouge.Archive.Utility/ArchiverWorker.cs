@@ -16,6 +16,7 @@ namespace EcorRouge.Archive.Utility
     public enum ArchiverState
     {
         Initializing,
+        ErrorStarting,
         Archiving,
         Uploading,
         UploadWaiting,
@@ -159,7 +160,20 @@ namespace EcorRouge.Archive.Utility
             IsBusy = true;
 
             ChangeState(ArchiverState.Initializing);
-                
+
+            try
+            {
+                await _plugin.TryConnectAndWriteSmallFile(_pluginProperties, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Error testing credentials: {ex.Message}", ex);
+
+                ChangeState(ArchiverState.ErrorStarting);
+                IsBusy = false;
+                return;
+            }
+
             try
             {
                 _skippedListFile = new StreamWriter(Path.Combine(PathHelper.GetRootDataPath(), "skipped_files.txt"));

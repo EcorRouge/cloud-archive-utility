@@ -55,6 +55,25 @@ namespace EcorRouge.Archive.Utility.Plugins.S3
         public override CloudProviderProperty[] Properties => PROPERTIES;
         public override bool KeepSession => true;
 
+        public override async Task<bool> TryConnectAndWriteSmallFile(Dictionary<string, object> properties, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await OpenSessionAsync(properties, cancellationToken);
+
+                var fileName = Path.Combine(Path.GetTempPath(), "ecorrouge-upload-test.txt");
+                File.WriteAllText(fileName, $"{DateTime.Now:F}");
+
+                await UploadFileAsync(fileName, cancellationToken);
+            }
+            finally
+            {
+                await CloseSessionAsync(cancellationToken);
+            }
+
+            return true;
+        }
+
         public override bool VerifyProperties(Dictionary<string, object> properties)
         {
             var requiredProps = new string[] { "aws_access_key", "aws_secret_key", "aws_region", "bucket" };

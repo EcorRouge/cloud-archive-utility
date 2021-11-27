@@ -26,6 +26,7 @@ namespace EcorRouge.Archive.Utility.Plugins
         public abstract CloudProviderProperty[] Properties { get; }
 
         public abstract bool KeepSession { get; }
+        public abstract Task<bool> TryConnectAndWriteSmallFile(Dictionary<string, object> properties, CancellationToken cancellationToken = default);
         public abstract bool VerifyProperties(Dictionary<string, object> properties);
         public abstract Task OpenSessionAsync(Dictionary<string, object> properties, CancellationToken cancellationToken = default);
         public abstract Task CloseSessionAsync(CancellationToken cancellationToken = default);

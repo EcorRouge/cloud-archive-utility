@@ -196,6 +196,12 @@ namespace EcorRouge.Archive.Utility.ViewModels
             {
                 case ArchiverState.Initializing:
                     break;
+                case ArchiverState.ErrorStarting:
+                    CanSelectSettings = true;
+                    CanSelectProgress = false;
+                    SelectedPageIndex = TAB_SETTINGS;
+                    MessageBox.Show("Error testing cloud provider credentials!");
+                    break;
                 case ArchiverState.Archiving:
                     UploadingVisible = false;
                     DeletingVisible = false;
@@ -253,6 +259,9 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
         private void ArchiveWorker_Completed(object? sender, EventArgs e)
         {
+            if (_worker.State == ArchiverState.ErrorStarting)
+                return;
+
             CanSelectSettings = false;
             CanSelectProgress = false;
             CanSelectFinish = true;
