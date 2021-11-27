@@ -29,6 +29,8 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private bool _canSelectProgress = false;
         private bool _canSelectFinish = false;
 
+        public string AppVersionString { get; } = "v." + typeof(MainWindowViewModel).Assembly.GetName().Version;
+
         public RelayCommand SelectFileCommand { get; set; }
         public RelayCommand SelectSettingsCommand { get; set; }
         public RelayCommand SelectProgressCommand { get; set; }

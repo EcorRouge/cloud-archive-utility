@@ -48,12 +48,13 @@
           </Grid.RowDefinitions>
 
           <StackPanel Margin="8, 16, 0, 0">
+            <TextBlock Text="{Binding AppVersionString}"/>
             <RadioButton Style="{StaticResource NavItemStyle}" 
                          ToolTip="Choose file" 
                          IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=0}" 
                          IsEnabled="{Binding CanSelectFile}"
                          Command="{Binding SelectFileCommand}"
-                         />
+            />
             <RadioButton Style="{StaticResource NavItemStyle}" 
                          ToolTip="Import settings" 
                          IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=1}" 
