@@ -94,6 +94,12 @@ namespace EcorRouge.Archive.Utility.Plugins.S3
         {
             lock (_lock)
             {
+                LogDebug("Using aws key: '" + properties["aws_access_key"] + "'");
+                LogDebug("Using aws secret: '" + properties["aws_secret_key"] + "'");
+                LogDebug("Using aws region: '" + properties["aws_region"] + "'");
+                LogDebug("Using aws bucket: '" + properties["bucket"] + "'");
+                LogDebug("Using aws prefix: '" + properties["prefix"] + "'");
+
                 _client = new AmazonS3Client(properties["aws_access_key"].ToString(),
                     properties["aws_secret_key"].ToString(),
                     RegionEndpoint.GetBySystemName(properties["aws_region"].ToString()));
@@ -124,6 +130,8 @@ namespace EcorRouge.Archive.Utility.Plugins.S3
             var keyPath = (String.IsNullOrWhiteSpace(_prefix) ? "" : _prefix ) + Path.GetFileName(fileName);
 
             var fileTransferUtility = new TransferUtility(_client);
+
+            LogDebug($"Uploading {fileName} to {keyPath}...");
 
             var fileTransferUtilityRequest = new TransferUtilityUploadRequest
             {
