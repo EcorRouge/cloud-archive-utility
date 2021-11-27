@@ -317,6 +317,8 @@ namespace EcorRouge.Archive.Utility
                 _zipFile.Write(buf, 0, bytesRead);
                 totalBytes += bytesRead;
 
+                _filesSizeInArchive += bytesRead;
+
                 ArchiveFileProgress = totalBytes * 100.0 / totalSize;
                 ArchivingProgress?.Invoke(this, EventArgs.Empty);
             }
