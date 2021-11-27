@@ -281,7 +281,7 @@ namespace EcorRouge.Archive.Utility
 
         private bool ShouldFlushZip()
         {
-            return _filesInArchive > _maximumFiles || _zipFile.Position / (1024 * 1024) > _maximumArchiveSizeMb;
+            return _filesInArchive >= _maximumFiles || _zipFile.Position / (1024 * 1024) >= _maximumArchiveSizeMb;
         }
 
         private void OpenZipFile()
