@@ -13,3 +13,36 @@ A utility to help get files off into long-term cloud storage
 Run `build-and-deploy.cmd` [build-and-deploy.cmd](build-and-deploy.cmd) and see it's output. Binaries will be stored in `deploy` folder. You can change version by modifying `version` file [version](version)
 
 For debugging, when you run from Visual Studio, please use `build-plugins.cmd` [build-plugins.cmd](build-plugins.cmd) which will build/copy all plugins to the output folder.
+
+## Signing
+
+How to configure signing:
+
+1. Run PowerShell as administrator and in PS window type:
+
+`set-executionpolicy remotesigned`
+`Install-Module -Name SignPath`
+
+Accept all questions.
+
+2. Go to your SignPath dashboard, add CI User, copy user token to a notepad.
+
+3. In SignPath dashboard, create a project, assign artifact configuration - portable executable file
+
+4. When creating a project - in the signing policy choose CI User as a submitter
+
+5. Copy script from CI integration tab and put into signpath.ps1 in the project root. Replace ci user token and input/output artifact paths like in example below:
+
+```
+Submit-SigningRequest `
+  -InputArtifactPath $args[0] `
+  -CIUserToken "your_ci_user_token" `
+  -OrganizationId "a65224f5-cf94-409d-be1c-e533879bacde" `
+  -ProjectSlug "EcorRouge_Archive_Utility" `
+  -SigningPolicySlug "TEST_EcorRouge_Archive_Utility" `
+  -OutputArtifactPath $args[1] `
+  -WaitForCompletion
+
+```
+
+6. Run `build-and-deploy.cmd`, it should sign binaries and installer automatically

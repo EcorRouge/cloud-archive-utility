@@ -7,3 +7,5 @@ installer/Output
 
 *.suo
 *.csproj.user
+
+signpath.ps1

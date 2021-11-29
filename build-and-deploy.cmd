@@ -6,16 +6,6 @@ set ZIP_PATH="C:\Program Files\7-Zip\7z.exe"
 set ISS_PATH="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 set OPENSSL_PATH="C:\OpenSSL-Win64\bin\openssl.exe"
 
-for /f "delims=" %%a in ( 
-   'WHERE /R "C:\Program Files (x86)\Windows Kits" signtool.exe' 
-) do (
-    set __CURRENT_FILE=%%a
-    if not "!__CURRENT_FILE:x64=!" == "!__CURRENT_FILE!" (
-       set SIGNTOOL=%%a
-    )
-)
-
-echo Using signtool: %SIGNTOOL%
 set /p SIGNTOOL_ARGS=<signtool_args
 echo Signtool arguments: %SIGNTOOL_ARGS%
 
@@ -63,9 +53,10 @@ powershell -Command "(Get-Content src\EcorRouge.Archive.Utility\EcorRouge.Archiv
 
 dotnet publish -c Release src\EcorRouge.Archive.Utility.sln
 
-if not "%SIGNTOOL%" == "" (
-  echo "%SIGNTOOL%" sign %SIGNTOOL_ARGS% build\net5.0-windows\publish\EcorRouge.Archive.Utility.exe
-  "%SIGNTOOL%" sign %SIGNTOOL_ARGS% build\net5.0-windows\publish\EcorRouge.Archive.Utility.exe
+IF EXIST signpath.ps1 (
+  move /y build\net5.0-windows\publish\EcorRouge.Archive.Utility.exe build\net5.0-windows\publish\EcorRouge.Archive.Utility-unsigned.exe
+  powershell -file signpath.ps1 build\net5.0-windows\publish\EcorRouge.Archive.Utility-unsigned.exe build\net5.0-windows\publish\EcorRouge.Archive.Utility.exe
+  del /s build\net5.0-windows\publish\EcorRouge.Archive.Utility-unsigned.exe
 )
 
 rmdir /s /q build\net5.0-windows\publish\plugins
@@ -83,9 +74,10 @@ popd
 
 copy /y installer\Output\setup-archive-utility-%NEW_VERSION%-x86.exe deploy\
 
-if not "%SIGNTOOL%" == "" (
-  echo "%SIGNTOOL%" sign %SIGNTOOL_ARGS% deploy\setup-archive-utility-%NEW_VERSION%-x86.exe
-  "%SIGNTOOL%" sign %SIGNTOOL_ARGS% deploy\setup-archive-utility-%NEW_VERSION%-x86.exe
+IF EXIST signpath.ps1 (
+  move /y deploy\setup-archive-utility-%NEW_VERSION%-x86.exe deploy\setup-archive-utility-%NEW_VERSION%-x86-unsigned.exe
+  powershell -file signpath.ps1 deploy\setup-archive-utility-%NEW_VERSION%-x86-unsigned.exe deploy\setup-archive-utility-%NEW_VERSION%-x86.exe
+  del /s deploy\setup-archive-utility-%NEW_VERSION%-x86-unsigned.exe
 )
 
 @endlocal
