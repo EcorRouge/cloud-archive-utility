@@ -106,6 +106,11 @@ namespace EcorRouge.Archive.Utility.Plugins.S3
 
                 _bucket = properties["bucket"]?.ToString() ?? "";
                 _prefix = properties["prefix"]?.ToString() ?? "";
+
+                if (!String.IsNullOrWhiteSpace(_prefix) && !_prefix.EndsWith("/"))
+                {
+                    _prefix += "/";
+                }
             }
 
             return Task.CompletedTask;
