@@ -14,6 +14,12 @@ namespace EcorRouge.Archive.Utility
             InitializeComponent();
 
             DataContext = new MainWindowViewModel();
+            Loaded += MainWindow_Loaded;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            (DataContext as MainWindowViewModel).CheckSavedState(this);
         }
 
         private void MainWindow_OnMouseDown(object sender, MouseButtonEventArgs e)

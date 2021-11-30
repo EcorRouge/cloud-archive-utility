@@ -33,6 +33,8 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private double _deleteProgress = 0;
         private double _totalProgress = 0;
 
+        private SavedState _savedState;
+
         private ArchiverWorker _worker;
 
         public RelayCommand CancelProgressCommand { get; set; }
@@ -181,7 +183,16 @@ namespace EcorRouge.Archive.Utility.ViewModels
             DeletingLabel = "Initializing";
             TotalLabel = "Initializing";
 
-            _worker = new ArchiverWorker(_fileName, plugin, values, _maximumFiles, _maximumArchiveSizeMb);
+            _savedState.PluginType = plugin.ProviderName;
+            _savedState.DeleteFiles = DeleteFilesAfterUpload;
+            _savedState.InputFileName = _fileName;
+            _savedState.TotalFilesToArchive = _totalFilesToArchive;
+            _savedState.TotalFilesSizeToArchive = _totalFileSizeToArchive;
+            _savedState.MaximumFiles = _maximumFiles;
+            _savedState.MaximumArchiveSizeMb = _maximumArchiveSizeMb;
+            _savedState.Save();
+
+            _worker = new ArchiverWorker(plugin, values, _savedState);
             _worker.StateChanged += ArchiverWorker_StateChanged;
             _worker.Completed += ArchiveWorker_Completed;
             _worker.ArchivingProgress += ArchiveWorker_ArchivingProgress;

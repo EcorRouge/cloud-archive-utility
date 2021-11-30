@@ -30,11 +30,10 @@ namespace EcorRouge.Archive.Utility
 
         private const int MAX_WAIT_TIME = 60;
 
-        private string _fileName;
         private PluginBase _plugin;
         private Dictionary<string, object> _pluginProperties;
-        private int _maximumFiles;
-        private int _maximumArchiveSizeMb;
+
+        private SavedState _savedState;
 
         private CancellationTokenSource _cts;
 
@@ -77,13 +76,21 @@ namespace EcorRouge.Archive.Utility
 
         public ArchiverState State { get; private set; }
 
-        public ArchiverWorker(string fileName, PluginBase plugin, Dictionary<string, object> pluginProperties, int maximumFiles, int maximumArchiveSizeMb)
+        public ArchiverWorker(PluginBase plugin, Dictionary<string, object> pluginProperties, SavedState savedState)
         {
-            this._fileName = fileName;
             this._plugin = plugin;
             this._pluginProperties = pluginProperties;
-            this._maximumFiles = maximumFiles;
-            this._maximumArchiveSizeMb = maximumArchiveSizeMb;
+            _savedState = savedState;
+
+            if (_savedState.IsEmpty)
+            {
+                _savedState.SetPluginProperties(pluginProperties);
+                _pluginProperties = pluginProperties;
+            }
+            else
+            {
+                _pluginProperties = _savedState.GetPluginProperties();
+            }
 
             _plugin.OnLogMessage += ArchiverPlugin_OnLogMessage;
             _plugin.OnUploadProgress += ArchiverPlugin_OnUploadProgress;
@@ -125,10 +132,10 @@ namespace EcorRouge.Archive.Utility
         {
             _filesInArchive = 0;
             _filesSizeInArchive = 0;
-            _filesProcessed = 0;
-            _bytesProcessed = 0;
-
             ArchiveFileProgress = 0;
+
+            _filesProcessed = _savedState.FilesProcessed;
+            _bytesProcessed = _savedState.BytesProcessed;
 
             _cts = new CancellationTokenSource();
 
@@ -176,7 +183,7 @@ namespace EcorRouge.Archive.Utility
 
             try
             {
-                _skippedListFile = new StreamWriter(Path.Combine(PathHelper.GetRootDataPath(), "skipped_files.txt"));
+                _skippedListFile = new StreamWriter(Path.Combine(PathHelper.GetRootDataPath(), "skipped_files.txt"), !_savedState.IsEmpty);
 
                 if (_plugin.KeepSession)
                 {
@@ -185,11 +192,47 @@ namespace EcorRouge.Archive.Utility
 
                 OpenZipFile();
 
-                using var reader = new StreamReader(_fileName);
+                using var reader = new StreamReader(_savedState.InputFileName);
+
+                string line;
+                if (!_savedState.IsEmpty) // Let's skip processed files
+                {
+                    if (!String.IsNullOrEmpty(_savedState.ArchiveFileName) && File.Exists(_savedState.ArchiveFileName))
+                    {
+                        try
+                        {
+                            File.Delete(_savedState.ArchiveFileName);
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error($"Error removing {_savedState.ArchiveFileName}", ex);
+                        }
+                    }
+
+                    try
+                    {
+                        while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested &&
+                               _filesProcessed >= 0)
+                        {
+                            line = reader.ReadLine();
+
+                            if (String.IsNullOrWhiteSpace(line))
+                                continue;
+
+                            _filesProcessed--;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"Error rewinding {_savedState.InputFileName} to {_savedState.FilesProcessed} line", ex);
+                    }
+
+                    _filesProcessed = _savedState.FilesProcessed;
+                }
 
                 while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested)
                 {
-                    var line = reader.ReadLine();
+                    line = reader.ReadLine();
 
                     if (String.IsNullOrWhiteSpace(line))
                         continue;
@@ -226,9 +269,12 @@ namespace EcorRouge.Archive.Utility
                         ArchiveFileProgress = 0;
                         ArchivingProgress?.Invoke(this, EventArgs.Empty);
                     }
+
+                    //Thread.Sleep(1000); //TODO: for test
                 }
 
                 await FlushArchive(cancellationToken);
+                SavedState.Clear();
             }
             catch (Exception ex)
             {
@@ -281,7 +327,7 @@ namespace EcorRouge.Archive.Utility
 
         private bool ShouldFlushZip()
         {
-            return _filesInArchive >= _maximumFiles || _zipFile.Position / (1024 * 1024) >= _maximumArchiveSizeMb;
+            return _filesInArchive >= _savedState.MaximumFiles || _zipFile.Position / (1024 * 1024) >= _savedState.MaximumArchiveSizeMb;
         }
 
         private void OpenZipFile()
@@ -294,6 +340,11 @@ namespace EcorRouge.Archive.Utility
             _metaFile = new StreamWriter(_metaFileName, false, Encoding.UTF8);
 
             _zipFileName = Path.Combine(PathHelper.GetTempPath(), guid + ".zip");
+
+            _savedState.BytesProcessed = BytesProcessed;
+            _savedState.FilesProcessed = FilesProcessed;
+            _savedState.ArchiveFileName = _zipFileName;
+            _savedState.Save();
 
             _zipFile = new ZipOutputStream(_zipFileName);
             _zipFile.EnableZip64 = Zip64Option.Always;
@@ -420,6 +471,9 @@ namespace EcorRouge.Archive.Utility
             }
 
             if (cancellationToken.IsCancellationRequested)
+                return;
+
+            if (!_savedState.DeleteFiles)
                 return;
 
             // delete source files

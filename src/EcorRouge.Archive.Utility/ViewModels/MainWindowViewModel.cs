@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using EcorRouge.Archive.Utility.Settings;
 using log4net;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
@@ -92,6 +93,8 @@ namespace EcorRouge.Archive.Utility.ViewModels
             {
                 CloudProviders.Add(plugin.ProviderName);
             }
+
+            _savedState = SavedState.Load();
         }
 
         public MainWindowViewModel()
@@ -138,11 +141,64 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 Application.Current.Shutdown(); //TODO: confirmation, cancel file loading, cancel archiving and cleanup
             });
 
+            _savedState = new SavedState()
+            {
+                IsEmpty = true
+            };
+
             ConfigureRuntimeProperties();
 
             InitFilePage();
             InitSettingsPage();
             InitProgressPage();
+        }
+
+        public void CheckSavedState(Window owner)
+        {
+            if (!_savedState.IsEmpty)
+            {
+                if (MessageBox.Show(owner,
+                    "Previous unfinished archive session was detected. Do you want to recover it and continue where it stopped?",
+                    "Confirm continue", MessageBoxButton.YesNoCancel) != MessageBoxResult.Yes)
+                {
+                    SavedState.Clear();
+
+                    _savedState = new SavedState()
+                    {
+                        IsEmpty = true
+                    };
+                }
+                else
+                {
+                    FileName = _savedState.InputFileName;
+
+                    TotalFilesToArchive = _savedState.TotalFilesToArchive;
+                    TotalFileSizeToArchive = _savedState.TotalFilesSizeToArchive;
+                    DeleteFilesAfterUpload = _savedState.DeleteFiles;
+                    MaximumFiles = _savedState.MaximumFiles;
+                    MaximumArchiveSizeMb = _savedState.MaximumArchiveSizeMb;
+
+                    SelectedProviderIndex = CloudProviders.IndexOf(_savedState.PluginType);
+                    var providerProperties = _savedState.GetPluginProperties();
+                    foreach (var property in Properties)
+                    {
+                        if(!providerProperties.ContainsKey(property.Name))
+                            continue;
+
+                        property.Value = providerProperties[property.Name]?.ToString();
+                    }
+                    OnPropertyChanged(nameof(Properties));
+
+                    SelectedPageIndex = TAB_PROGRESS;
+
+                    CanSelectFile = true;
+                    CanSelectSettings = false;
+                    CanSelectProgress = true;
+                    CanSelectFinish = false;
+
+                    StartArchiving();
+                }
+            }
         }
     }
 }
