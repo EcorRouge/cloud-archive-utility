@@ -1,0 +1,1 @@
+build-and-deploy.cmd sign

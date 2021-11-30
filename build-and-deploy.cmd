@@ -2,6 +2,18 @@
 
 @setlocal enableextensions enabledelayedexpansion
 
+set SIGNING_MODE=%1
+
+if "%1"=="" (
+  set SIGNING_MODE=nosign 
+)
+
+IF NOT EXIST signpath.ps1 (
+  set SIGNING_MODE=nosign
+)
+
+echo Code signing mode = %SIGNING_MODE%
+
 set ZIP_PATH="C:\Program Files\7-Zip\7z.exe"
 set ISS_PATH="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 set OPENSSL_PATH="C:\OpenSSL-Win64\bin\openssl.exe"
@@ -53,7 +65,7 @@ powershell -Command "(Get-Content src\EcorRouge.Archive.Utility\EcorRouge.Archiv
 
 dotnet publish -c Release src\EcorRouge.Archive.Utility.sln
 
-IF EXIST signpath.ps1 (
+IF %SIGNING_MODE%==sign (
   move /y build\net5.0-windows\publish\EcorRouge.Archive.Utility.exe build\net5.0-windows\publish\EcorRouge.Archive.Utility-unsigned.exe
   powershell -file signpath.ps1 build\net5.0-windows\publish\EcorRouge.Archive.Utility-unsigned.exe build\net5.0-windows\publish\EcorRouge.Archive.Utility.exe
   del /s build\net5.0-windows\publish\EcorRouge.Archive.Utility-unsigned.exe
@@ -74,7 +86,7 @@ popd
 
 copy /y installer\Output\setup-archive-utility-%NEW_VERSION%-x86.exe deploy\
 
-IF EXIST signpath.ps1 (
+IF %SIGNING_MODE%==sign (
   move /y deploy\setup-archive-utility-%NEW_VERSION%-x86.exe deploy\setup-archive-utility-%NEW_VERSION%-x86-unsigned.exe
   powershell -file signpath.ps1 deploy\setup-archive-utility-%NEW_VERSION%-x86-unsigned.exe deploy\setup-archive-utility-%NEW_VERSION%-x86.exe
   del /s deploy\setup-archive-utility-%NEW_VERSION%-x86-unsigned.exe
