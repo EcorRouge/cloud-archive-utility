@@ -195,7 +195,7 @@
               <TextBlock Grid.Row="8" HorizontalAlignment="Center" Text="{Binding TotalLabel}" />
               <ProgressBar Grid.Row="9" Height="5" VerticalAlignment="Top" Maximum="100" Value="{Binding TotalProgress}"/>
 
-              <Button Grid.Row="10" Style="{StaticResource NavButtonStyle}" VerticalAlignment="Center">Cancel</Button>
+              <Button Grid.Row="10" Style="{StaticResource NavButtonStyle}" VerticalAlignment="Center" Command="{Binding CancelProgressCommand}">Cancel</Button>
             </Grid>
           </TabItem>
           <TabItem>

@@ -43,6 +43,7 @@ namespace EcorRouge.Archive.Utility
         private long _bytesProcessed = 0;
 
         private long _totalArchiveSize = 0;
+        private long _zipFileSize = 0;
         private long _bytesUploaded = 0;
         private double _uploadProgress = 0;
 
@@ -60,12 +61,13 @@ namespace EcorRouge.Archive.Utility
         public EventHandler DeletingProgress;
         public EventHandler StateChanged;
 
+        public bool IsCanceled { get; private set; }
         public bool IsBusy { get; private set; }
 
         public long FilesInArchive => _filesInArchive;
         public long FilesSizeInArchive => _filesSizeInArchive;
         public long TotalArchiveSize => _totalArchiveSize;
-        public long ArchiveSize => _zipFile?.Position ?? 0;
+        public long ArchiveSize => _zipFileSize;
         public long DeletedFilesCount => _deletedFilesCount;
         public long FilesProcessed => _filesProcessed;
         public long BytesProcessed => _bytesProcessed;
@@ -136,6 +138,7 @@ namespace EcorRouge.Archive.Utility
             _filesSizeInArchive = 0;
             _totalArchiveSize = 0;
             ArchiveFileProgress = 0;
+            IsCanceled = false;
 
             _filesProcessed = _savedState.FilesProcessed;
             _bytesProcessed = _savedState.BytesProcessed;
@@ -152,6 +155,8 @@ namespace EcorRouge.Archive.Utility
                 {
                     log.Error("Error in DoWork", t.Exception);
                 }
+
+                IsCanceled = _cts.IsCancellationRequested;
 
                 Completed?.Invoke(this, EventArgs.Empty);
             });
@@ -374,6 +379,7 @@ namespace EcorRouge.Archive.Utility
                 totalBytes += bytesRead;
 
                 _filesSizeInArchive += bytesRead;
+                _zipFileSize = _zipFile.Position;
 
                 ArchiveFileProgress = totalBytes * 100.0 / totalSize;
                 ArchivingProgress?.Invoke(this, EventArgs.Empty);

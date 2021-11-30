@@ -286,7 +286,14 @@ namespace EcorRouge.Archive.Utility.ViewModels
             TotalCompletedFilesLabel = $"Total files processed: {_worker.FilesProcessed}";
             TotalCompletedBytesLabel = $"Total bytes processed: {FileSizeFormatter.Format(_worker.BytesProcessed)} (archived:{FileSizeFormatter.Format(_worker.TotalArchiveSize + _worker.ArchiveSize)} )";
 
-            SelectedPageIndex = TAB_FINISH;
+            if (_worker.IsCanceled)
+            {
+                SelectedPageIndex = TAB_SELECT_FILE;
+            }
+            else
+            {
+                SelectedPageIndex = TAB_FINISH;
+            }
         }
 
         private void FormatTotalLabel()
