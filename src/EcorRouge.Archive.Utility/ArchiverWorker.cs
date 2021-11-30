@@ -42,6 +42,7 @@ namespace EcorRouge.Archive.Utility
         private long _filesProcessed = 0;
         private long _bytesProcessed = 0;
 
+        private long _totalArchiveSize = 0;
         private long _bytesUploaded = 0;
         private double _uploadProgress = 0;
 
@@ -63,6 +64,7 @@ namespace EcorRouge.Archive.Utility
 
         public long FilesInArchive => _filesInArchive;
         public long FilesSizeInArchive => _filesSizeInArchive;
+        public long TotalArchiveSize => _totalArchiveSize;
         public long ArchiveSize => _zipFile?.Position ?? 0;
         public long DeletedFilesCount => _deletedFilesCount;
         public long FilesProcessed => _filesProcessed;
@@ -132,10 +134,12 @@ namespace EcorRouge.Archive.Utility
         {
             _filesInArchive = 0;
             _filesSizeInArchive = 0;
+            _totalArchiveSize = 0;
             ArchiveFileProgress = 0;
 
             _filesProcessed = _savedState.FilesProcessed;
             _bytesProcessed = _savedState.BytesProcessed;
+            _totalArchiveSize = _savedState.TotalArchivedSize;
 
             _cts = new CancellationTokenSource();
 
@@ -344,6 +348,7 @@ namespace EcorRouge.Archive.Utility
             _savedState.BytesProcessed = BytesProcessed;
             _savedState.FilesProcessed = FilesProcessed;
             _savedState.ArchiveFileName = _zipFileName;
+            _savedState.TotalArchivedSize = _totalArchiveSize;
             _savedState.Save();
 
             _zipFile = new ZipOutputStream(_zipFileName);
@@ -443,6 +448,8 @@ namespace EcorRouge.Archive.Utility
 
             _zipFile.Close();
             await _zipFile.DisposeAsync();
+
+            _totalArchiveSize += new FileInfo(_zipFileName).Length;
 
             // upload
             if (!cancellationToken.IsCancellationRequested)

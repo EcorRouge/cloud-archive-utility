@@ -263,7 +263,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             ArchiveProgress = Math.Max(countProgress, sizeProgress);
             ArchiveFileProgress = _worker.ArchiveFileProgress;
 
-            ArchivingLabel = $"Archiving: {ArchiveProgress:N1}%, {_worker.FilesInArchive} files added, {FileSizeFormatter.Format(_worker.ArchiveSize)} ({FileSizeFormatter.Format(_worker.FilesSizeInArchive)})";
+            ArchivingLabel = $"Archiving: {ArchiveProgress:N1}%, {_worker.FilesInArchive} files added, {FileSizeFormatter.Format(_worker.FilesSizeInArchive)} (archived: {FileSizeFormatter.Format(_worker.ArchiveSize)})";
 
             FormatTotalLabel();
         }
@@ -284,7 +284,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             CanSelectFinish = true;
 
             TotalCompletedFilesLabel = $"Total files processed: {_worker.FilesProcessed}";
-            TotalCompletedBytesLabel = $"Total bytes processed: {FileSizeFormatter.Format(_worker.BytesProcessed)}";
+            TotalCompletedBytesLabel = $"Total bytes processed: {FileSizeFormatter.Format(_worker.BytesProcessed)} (archived:{FileSizeFormatter.Format(_worker.TotalArchiveSize + _worker.ArchiveSize)} )";
 
             SelectedPageIndex = TAB_FINISH;
         }

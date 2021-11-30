@@ -16,6 +16,7 @@ namespace EcorRouge.Archive.Utility.Settings
         public long FilesProcessed { get; set; }
         public long BytesProcessed { get; set; }
         public string InputFileName { get; set; }
+        public long TotalArchivedSize { get; set; }
         public long TotalFilesToArchive { get; set; }
         public long TotalFilesSizeToArchive { get; set; }
         public string ArchiveFileName { get; set; }
