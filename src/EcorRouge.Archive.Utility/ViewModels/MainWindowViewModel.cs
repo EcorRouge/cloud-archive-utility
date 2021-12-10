@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using EcorRouge.Archive.Utility.Settings;
+using EcorRouge.Archive.Utility.Util;
 using log4net;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
@@ -195,6 +196,26 @@ namespace EcorRouge.Archive.Utility.ViewModels
                     CanSelectSettings = false;
                     CanSelectProgress = true;
                     CanSelectFinish = false;
+
+                    if (!String.IsNullOrEmpty(FileName))
+                    {
+                        try
+                        {
+                            _inputFile = InputFileParser.ScanFile(FileName);
+
+                            TotalFilesToArchive = _inputFile.TotalFiles;
+                            TotalFileSizeToArchive = _inputFile.TotalFilesSize;
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error($"Error parsing {FileName}", ex);
+
+                            FileName = null;
+                            CanSelectProgress = false;
+
+                            return;
+                        }
+                    }
 
                     StartArchiving();
                 }

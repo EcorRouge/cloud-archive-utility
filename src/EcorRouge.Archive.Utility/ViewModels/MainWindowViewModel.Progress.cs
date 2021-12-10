@@ -192,7 +192,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             _savedState.MaximumArchiveSizeMb = _maximumArchiveSizeMb;
             _savedState.Save();
 
-            _worker = new ArchiverWorker(plugin, values, _savedState);
+            _worker = new ArchiverWorker(plugin, values, _savedState, _inputFile);
             _worker.StateChanged += ArchiverWorker_StateChanged;
             _worker.Completed += ArchiveWorker_Completed;
             _worker.ArchivingProgress += ArchiveWorker_ArchivingProgress;
@@ -284,7 +284,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             CanSelectFinish = true;
 
             TotalCompletedFilesLabel = $"Total files processed: {_worker.FilesProcessed}";
-            TotalCompletedBytesLabel = $"Total bytes processed: {FileSizeFormatter.Format(_worker.BytesProcessed)} (archived:{FileSizeFormatter.Format(_worker.TotalArchiveSize + _worker.ArchiveSize)} )";
+            TotalCompletedBytesLabel = $"Total bytes processed: {FileSizeFormatter.Format(_worker.BytesProcessed)} (archived: {FileSizeFormatter.Format(_worker.TotalArchiveSize + _worker.ArchiveSize)} )";
 
             if (_worker.IsCanceled)
             {

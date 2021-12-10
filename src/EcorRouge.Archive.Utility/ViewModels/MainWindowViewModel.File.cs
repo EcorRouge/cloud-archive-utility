@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using EcorRouge.Archive.Utility.Util;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Win32;
 
@@ -16,6 +17,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
         private bool _canBrowseFile = true;
         private bool _fileLoading;
+        private InputFile _inputFile;
 
         public RelayCommand BrowseFileCommand { get; set; }
 
@@ -33,7 +35,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
         public void ChooseFile()
         {
             var ofd = new OpenFileDialog();
-            ofd.Filter = "Text Files|*.txt|All Files|*.*";
+            ofd.Filter = "Supported file types|*.txt;*.csv;*.tsv;*.zip|All Files|*.*";
 
             if (ofd.ShowDialog() ?? false)
             {
@@ -50,28 +52,10 @@ namespace EcorRouge.Archive.Utility.ViewModels
                     TotalFilesToArchive = 0;
                     TotalFileSizeToArchive = 0;
 
-                    using (var reader = new StreamReader(FileName, Encoding.UTF8))
-                    {
-                        while (!reader.EndOfStream)
-                        {
-                            var line = reader.ReadLine();
-                            if(String.IsNullOrWhiteSpace(line))
-                                continue;
+                    _inputFile = InputFileParser.ScanFile(FileName);
 
-                            //{file.FileName}|{file.FileLength}|{file.LastWriteTime}
-                            var parts = line.Split("|");
-                            if(parts.Length < 3)
-                                continue;
-
-                            long length = 0;
-
-                            if (Int64.TryParse(parts[1], out length))
-                            {
-                                TotalFilesToArchive++;
-                                TotalFileSizeToArchive += length;
-                            }
-                        }
-                    }
+                    TotalFilesToArchive = _inputFile.TotalFiles;
+                    TotalFileSizeToArchive = _inputFile.TotalFilesSize;
                 }, _fileOpenCts.Token).ContinueWith(t =>
                 {
                     _fileLoading = false;

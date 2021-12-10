@@ -10,6 +10,7 @@ using log4net;
 using EcorRouge.Archive.Utility.Extensions;
 using EcorRouge.Archive.Utility.Plugins;
 using EcorRouge.Archive.Utility.Settings;
+using EcorRouge.Archive.Utility.Util;
 
 namespace EcorRouge.Archive.Utility
 {
@@ -52,6 +53,7 @@ namespace EcorRouge.Archive.Utility
         private StreamWriter _metaFile;
         private ZipOutputStream _zipFile;
         private string _zipFileName;
+        private InputFile _inputFile;
         private List<string> _archiveFileList;
         private long _deletedFilesCount;
 
@@ -80,9 +82,10 @@ namespace EcorRouge.Archive.Utility
 
         public ArchiverState State { get; private set; }
 
-        public ArchiverWorker(PluginBase plugin, Dictionary<string, object> pluginProperties, SavedState savedState)
+        public ArchiverWorker(PluginBase plugin, Dictionary<string, object> pluginProperties, SavedState savedState, InputFile inputFile)
         {
             this._plugin = plugin;
+            this._inputFile = inputFile;
             this._pluginProperties = pluginProperties;
             _savedState = savedState;
 
@@ -192,6 +195,8 @@ namespace EcorRouge.Archive.Utility
 
             try
             {
+                using var parser = InputFileParser.OpenFile(_inputFile);
+
                 _skippedListFile = new StreamWriter(Path.Combine(PathHelper.GetRootDataPath(), "skipped_files.txt"), !_savedState.IsEmpty);
 
                 if (_plugin.KeepSession)
@@ -201,9 +206,7 @@ namespace EcorRouge.Archive.Utility
 
                 OpenZipFile();
 
-                using var reader = new StreamReader(_savedState.InputFileName);
-
-                string line;
+                
                 if (!_savedState.IsEmpty) // Let's skip processed files
                 {
                     if (!String.IsNullOrEmpty(_savedState.ArchiveFileName) && File.Exists(_savedState.ArchiveFileName))
@@ -220,14 +223,9 @@ namespace EcorRouge.Archive.Utility
 
                     try
                     {
-                        while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested &&
+                        while (parser.GetNextEntry() != null && !cancellationToken.IsCancellationRequested &&
                                _filesProcessed >= 0)
                         {
-                            line = reader.ReadLine();
-
-                            if (String.IsNullOrWhiteSpace(line))
-                                continue;
-
                             _filesProcessed--;
                         }
                     }
@@ -239,29 +237,21 @@ namespace EcorRouge.Archive.Utility
                     _filesProcessed = _savedState.FilesProcessed;
                 }
 
-                while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested)
+                InputFileEntry entry;
+
+                while ((entry = parser.GetNextEntry()) != null && !cancellationToken.IsCancellationRequested)
                 {
-                    line = reader.ReadLine();
-
-                    if (String.IsNullOrWhiteSpace(line))
-                        continue;
-
-                    //{file.FileName}|{file.FileLength}|{file.LastWriteTime}
-                    var parts = line.Split("|");
-                    if (parts.Length < 3)
-                        continue;
-
                     ChangeState(ArchiverState.Archiving);
 
                     try
                     {
                         ArchiveFileProgress = 0;
-                        ProcessFile(parts[0], cancellationToken);
+                        ProcessFile(entry.Path, cancellationToken);
                     }
                     catch (Exception ex)
                     {
-                        _skippedListFile.WriteLine(line);
-                        log.Error("Error processing file", ex);
+                        _skippedListFile.WriteLine(entry.Path);
+                        log.Error($"Error processing file: {entry.Path}", ex);
                     }
 
                     _filesProcessed++;
