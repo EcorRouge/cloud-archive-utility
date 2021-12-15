@@ -99,8 +99,11 @@ namespace EcorRouge.Archive.Utility
                 _pluginProperties = _savedState.GetPluginProperties();
             }
 
-            _plugin.OnLogMessage += ArchiverPlugin_OnLogMessage;
-            _plugin.OnUploadProgress += ArchiverPlugin_OnUploadProgress;
+            if (_plugin != null)
+            {
+                _plugin.OnLogMessage += ArchiverPlugin_OnLogMessage;
+                _plugin.OnUploadProgress += ArchiverPlugin_OnUploadProgress;
+            }
         }
 
         private void ArchiverPlugin_OnUploadProgress(long bytesUploaded, double percentUploaded)
@@ -180,17 +183,20 @@ namespace EcorRouge.Archive.Utility
 
             ChangeState(ArchiverState.Initializing);
 
-            try
+            if (_plugin != null)
             {
-                await _plugin.TryConnectAndWriteSmallFile(_pluginProperties, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                log.Error($"Error testing credentials: {ex.Message}", ex);
+                try
+                {
+                    await _plugin.TryConnectAndWriteSmallFile(_pluginProperties, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"Error testing credentials: {ex.Message}", ex);
 
-                ChangeState(ArchiverState.ErrorStarting);
-                IsBusy = false;
-                return;
+                    ChangeState(ArchiverState.ErrorStarting);
+                    IsBusy = false;
+                    return;
+                }
             }
 
             try
@@ -199,14 +205,21 @@ namespace EcorRouge.Archive.Utility
 
                 _skippedListFile = new StreamWriter(Path.Combine(PathHelper.GetRootDataPath(), "skipped_files.txt"), !_savedState.IsEmpty);
 
-                if (_plugin.KeepSession)
+                if (_plugin?.KeepSession ?? false)
                 {
                     await _plugin.OpenSessionAsync(_pluginProperties, cancellationToken);
                 }
 
-                OpenZipFile();
+                if (_plugin != null)
+                {
+                    OpenZipFile();
+                }
+                else
+                {
+                    _filesInArchive = _savedState.TotalFilesToArchive;
+                    _deletedFilesCount = 0;
+                }
 
-                
                 if (!_savedState.IsEmpty) // Let's skip processed files
                 {
                     if (!String.IsNullOrEmpty(_savedState.ArchiveFileName) && File.Exists(_savedState.ArchiveFileName))
@@ -241,7 +254,7 @@ namespace EcorRouge.Archive.Utility
 
                 while ((entry = parser.GetNextEntry()) != null && !cancellationToken.IsCancellationRequested)
                 {
-                    ChangeState(ArchiverState.Archiving);
+                    ChangeState(_plugin == null ? ArchiverState.Deleting : ArchiverState.Archiving);
 
                     try
                     {
@@ -259,20 +272,27 @@ namespace EcorRouge.Archive.Utility
 
                     ArchivingProgress?.Invoke(this, EventArgs.Empty);
 
-                    if (ShouldFlushZip())
+                    if (_plugin != null)
                     {
-                        await FlushArchive(cancellationToken);
+                        if (ShouldFlushZip())
+                        {
+                            await FlushArchive(cancellationToken);
 
-                        OpenZipFile();
+                            OpenZipFile();
 
-                        ArchiveFileProgress = 0;
-                        ArchivingProgress?.Invoke(this, EventArgs.Empty);
+                            ArchiveFileProgress = 0;
+                            ArchivingProgress?.Invoke(this, EventArgs.Empty);
+                        }
                     }
 
                     //Thread.Sleep(1000); //TODO: for test
                 }
 
-                await FlushArchive(cancellationToken);
+                if (_plugin != null)
+                {
+                    await FlushArchive(cancellationToken);
+                }
+
                 SavedState.Clear();
             }
             catch (Exception ex)
@@ -281,7 +301,7 @@ namespace EcorRouge.Archive.Utility
             }
             finally
             {
-                if (_plugin.KeepSession)
+                if (_plugin?.KeepSession ?? false)
                 {
                     try
                     {
@@ -311,6 +331,18 @@ namespace EcorRouge.Archive.Utility
                 throw new FileNotFoundException("File not found", fileName);
 
             var fInfo = new FileInfo(fileName);
+
+            if (_plugin == null) // We are deleting
+            {
+                var length = fInfo.Length;
+
+                File.Delete(fileName);
+
+                _deletedFilesCount++;
+                DeletingProgress?.Invoke(this, EventArgs.Empty);
+                _bytesProcessed += length;
+                return;
+            }
 
             var guid = Guid.NewGuid();
             var newFileName = guid + Path.GetExtension(fileName);

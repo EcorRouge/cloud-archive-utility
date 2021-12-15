@@ -12,6 +12,7 @@ namespace EcorRouge.Archive.Utility.Settings
     {
         [JsonIgnore]
         public bool IsEmpty { get; set; }
+        public int SelectedMode { get; set; }
 
         public long FilesProcessed { get; set; }
         public long BytesProcessed { get; set; }
@@ -29,6 +30,12 @@ namespace EcorRouge.Archive.Utility.Settings
 
         public void SetPluginProperties(Dictionary<string, object> pluginProperties)
         {
+            if (pluginProperties == null)
+            {
+                PluginProperties = null;
+                return;
+            }
+
             PluginProperties = StringProtection.EncryptString(JsonConvert.SerializeObject(pluginProperties));
         }
 

@@ -12,6 +12,7 @@ using log4net.Core;
 using Microsoft.Toolkit.Mvvm.Input;
 using EcorRouge.Archive.Utility.Converters;
 using EcorRouge.Archive.Utility.Extensions;
+using EcorRouge.Archive.Utility.Plugins;
 using EcorRouge.Archive.Utility.Settings;
 
 namespace EcorRouge.Archive.Utility.ViewModels
@@ -134,35 +135,65 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
         public void StartArchiving()
         {
-            if (SelectedProviderIndex < 0 || SelectedProviderIndex >= PluginsManager.Instance.Plugins.Count)
+            StartArchiving(false);
+        }
+
+        public void StartArchiving(bool saved)
+        {
+            if (SelectedModeIndex == MODE_DELETE && !saved)
+            {
+                var sizeStr = FileSizeFormatter.Format(TotalFileSizeToArchive);
+
+                if (MessageBox.Show(
+                    $"Your are going to remove {TotalFilesToArchive} files, {sizeStr} of data. This operation cannot be undone. Are you sure want to continue?",
+                    "Delete warning",
+                    MessageBoxButton.YesNoCancel
+                ) != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+            }
+
+            if (SelectedModeIndex == MODE_UPLOAD && (SelectedProviderIndex < 0 || SelectedProviderIndex >= PluginsManager.Instance.Plugins.Count))
                 return;
 
             CanCancelProcess = true;
 
-            var plugin = PluginsManager.Instance.Plugins[SelectedProviderIndex];
+            PluginBase plugin = null;
 
-            var values = GetPropertyValues();
-
-            foreach (var value in values)
+            Dictionary<string, object> values;
+            if (SelectedModeIndex == MODE_UPLOAD)
             {
-                SettingsFile.Instance.AddProviderProperty(plugin.ProviderName, value.Key, value.Value?.ToString());
-            }
-            SettingsFile.Instance.Save();
+                plugin = PluginsManager.Instance.Plugins[SelectedProviderIndex];
 
-            var size = PathHelper.GetFreeTempDriveSize();
+                values = GetPropertyValues();
 
-            if (size < MaximumArchiveSizeMb * 1024 * 1024)
-            {
-                var sizeStr = FileSizeFormatter.Format(size);
-
-                if (MessageBox.Show(
-                    $"There's no enough space on current drive to fit archives.\nSpace remaining: {sizeStr}. Archive size configured: {MaximumArchiveSizeMb} Mb. Are you sure want to continue?",
-                    "Low space warning",
-                    MessageBoxButton.YesNoCancel
-                    ) != MessageBoxResult.Yes)
+                foreach (var value in values)
                 {
-                    return;
+                    SettingsFile.Instance.AddProviderProperty(plugin.ProviderName, value.Key, value.Value?.ToString());
                 }
+
+                SettingsFile.Instance.Save();
+
+                var size = PathHelper.GetFreeTempDriveSize();
+
+                if (size < MaximumArchiveSizeMb * 1024 * 1024)
+                {
+                    var sizeStr = FileSizeFormatter.Format(size);
+
+                    if (MessageBox.Show(
+                        $"There's no enough space on current drive to fit archives.\nSpace remaining: {sizeStr}. Archive size configured: {MaximumArchiveSizeMb} Mb. Are you sure want to continue?",
+                        "Low space warning",
+                        MessageBoxButton.YesNoCancel
+                    ) != MessageBoxResult.Yes)
+                    {
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                values = null;
             }
 
             ArchivingLabel = "Initializing...";
@@ -183,7 +214,8 @@ namespace EcorRouge.Archive.Utility.ViewModels
             DeletingLabel = "Initializing";
             TotalLabel = "Initializing";
 
-            _savedState.PluginType = plugin.ProviderName;
+            _savedState.SelectedMode = _selectedModeIndex;
+            _savedState.PluginType = plugin?.ProviderName;
             _savedState.DeleteFiles = DeleteFilesAfterUpload;
             _savedState.InputFileName = _fileName;
             _savedState.TotalFilesToArchive = _totalFilesToArchive;
@@ -257,13 +289,23 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
         private void ArchiveWorker_ArchivingProgress(object? sender, EventArgs e)
         {
-            double countProgress = _worker.FilesInArchive * 100.0 / _maximumFiles;
-            double sizeProgress = (_worker.FilesSizeInArchive / (1024.0 * 1024.0)) * 100.0 / _maximumArchiveSizeMb;
+            if (_selectedModeIndex == MODE_DELETE)
+            {
+                ArchiveProgress = _worker.FilesProcessed * 100.0 / TotalFilesToArchive;
+                ArchiveFileProgress = 0;
 
-            ArchiveProgress = Math.Max(countProgress, sizeProgress);
-            ArchiveFileProgress = _worker.ArchiveFileProgress;
+                ArchivingLabel = $"Processing: {ArchiveProgress:N1}%, {_worker.FilesInArchive} files";
+            }
+            else
+            {
+                double countProgress = _worker.FilesInArchive * 100.0 / _maximumFiles;
+                double sizeProgress = (_worker.FilesSizeInArchive / (1024.0 * 1024.0)) * 100.0 / _maximumArchiveSizeMb;
 
-            ArchivingLabel = $"Archiving: {ArchiveProgress:N1}%, {_worker.FilesInArchive} files added, {FileSizeFormatter.Format(_worker.FilesSizeInArchive)} (archived: {FileSizeFormatter.Format(_worker.ArchiveSize)})";
+                ArchiveProgress = Math.Max(countProgress, sizeProgress);
+                ArchiveFileProgress = _worker.ArchiveFileProgress;
+
+                ArchivingLabel = $"Archiving: {ArchiveProgress:N1}%, {_worker.FilesInArchive} files added, {FileSizeFormatter.Format(_worker.FilesSizeInArchive)} (archived: {FileSizeFormatter.Format(_worker.ArchiveSize)})";
+            }
 
             FormatTotalLabel();
         }

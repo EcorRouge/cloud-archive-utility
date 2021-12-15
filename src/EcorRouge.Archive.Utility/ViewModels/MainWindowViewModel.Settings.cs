@@ -9,7 +9,11 @@ namespace EcorRouge.Archive.Utility.ViewModels
 {
     public partial class MainWindowViewModel
     {
+        private const int MODE_UPLOAD = 0;
+        private const int MODE_DELETE = 1;
+
         private PropertyModel[] _properties = null;
+        private int _selectedModeIndex = MODE_UPLOAD;
         private bool _canStart;
         private int _selectedProviderIndex;
         private bool _deleteFilesAfterUpload;
@@ -19,6 +23,17 @@ namespace EcorRouge.Archive.Utility.ViewModels
         public ObservableCollection<string> CloudProviders { get; } = new ObservableCollection<string>();
 
         public RelayCommand StartCommand { get; set; }
+
+        public int SelectedModeIndex
+        {
+            get => _selectedModeIndex;
+            set
+            {
+                SetProperty(ref _selectedModeIndex, value);
+
+                CanStart = CheckCanStart();
+            }
+        }
 
         public bool CanStart
         {
@@ -127,6 +142,9 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
         private bool CheckCanStart()
         {
+            if (SelectedModeIndex == MODE_DELETE)
+                return true;
+
             if (SelectedProviderIndex < 0 || SelectedProviderIndex >= PluginsManager.Instance.Plugins.Count)
                 return false;
 

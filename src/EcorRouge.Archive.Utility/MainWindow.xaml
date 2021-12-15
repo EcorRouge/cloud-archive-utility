@@ -117,57 +117,81 @@
             </Grid>
           </TabItem>
           <TabItem>
-            <Grid Margin="24">
+            <Grid>
               <Grid.RowDefinitions>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="24"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="24"/>
                 <RowDefinition Height="48"/>
+                <RowDefinition Height="24"/>
               </Grid.RowDefinitions>
-              <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock>Maximum files in one archive: </TextBlock>
-                <TextBox Width="50" Margin="8,0,0,0" Text="{Binding MaximumFiles}"/>
-              </StackPanel>
-              <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock>Maximum archive size, Mb: </TextBlock>
-                <TextBox Width="50" Margin="22,0,0,0" Text="{Binding MaximumArchiveSizeMb}"/>
-              </StackPanel>
-              <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock>Cloud provider:</TextBlock>
-                <ComboBox Width="150" Margin="19,0,0,0" ItemsSource="{Binding CloudProviders}" SelectedIndex="{Binding SelectedProviderIndex}"/>
-              </StackPanel>
-              <GroupBox Grid.Row="3" Header="Cloud provider settings">
-                <ItemsControl ItemsSource="{Binding Properties}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                      <Grid Margin="5">
-                        <Grid.ColumnDefinitions>
-                          <ColumnDefinition Width="150"/>
-                          <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                          <TextBlock Text="{Binding Title}"/>
-                          <TextBlock Text=":"/>
-                        </StackPanel>
-                        
-                        <TextBox Grid.Column="1" Margin="16,0,0,0" Text="{Binding Value}" VerticalAlignment="Center"/>
-                        
-                      </Grid>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </GroupBox>
+              <TabControl Margin="4" Style="{StaticResource RightTabControlStyle}" SelectedIndex="{Binding SelectedModeIndex}">
+                <TabItem>
+                  <TabItem.Header>
+                    <TextBlock Style="{StaticResource TabItemText}">Upload files to the Cloud</TextBlock>
+                  </TabItem.Header>
+                  <Grid Margin="24">
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="24"/>
+                      <RowDefinition Height="24"/>
+                      <RowDefinition Height="24"/>
+                      <RowDefinition Height="*"/>
+                      <RowDefinition Height="24"/>
+                      <RowDefinition Height="24"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+                      <TextBlock>Maximum files in one archive:</TextBlock>
+                      <TextBox Width="50" Margin="8,0,0,0" Text="{Binding MaximumFiles}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
+                      <TextBlock>Maximum archive size, Mb:</TextBlock>
+                      <TextBox Width="50" Margin="22,0,0,0" Text="{Binding MaximumArchiveSizeMb}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
+                      <TextBlock>Cloud provider:</TextBlock>
+                      <ComboBox Width="150" Margin="19,0,0,0" ItemsSource="{Binding CloudProviders}" SelectedIndex="{Binding SelectedProviderIndex}"/>
+                    </StackPanel>
+                    <GroupBox Grid.Row="3" Header="Cloud provider settings">
+                      <ItemsControl ItemsSource="{Binding Properties}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <Grid Margin="5">
+                              <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                              </Grid.ColumnDefinitions>
+                              <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Title}"/>
+                                <TextBlock Text=":"/>
+                              </StackPanel>
 
-              <CheckBox Grid.Row="5" IsChecked="{Binding DeleteFilesAfterUpload}">Delete files after upload</CheckBox>
-              <Button Grid.Row="6" 
+                              <TextBox Grid.Column="1" Margin="16,0,0,0" Text="{Binding Value}" VerticalAlignment="Center"/>
+
+                            </Grid>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </GroupBox>
+
+                    <CheckBox Grid.Row="5" IsChecked="{Binding DeleteFilesAfterUpload}">Delete files after upload</CheckBox>
+                  </Grid>
+                </TabItem>
+                <TabItem>
+                  <TabItem.Header>
+                    <TextBlock Style="{StaticResource TabItemText}">Delete All Files</TextBlock>
+                  </TabItem.Header>
+
+                  <StackPanel Orientation="Vertical" Margin="24,48" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <TextBlock Style="{StaticResource HeaderStyle3}" HorizontalAlignment="Center">Caution! In this mode Archive Utility will just remove all selected files!</TextBlock>
+                    <TextBlock Style="{StaticResource HeaderStyle3}" HorizontalAlignment="Center">Please make sure that you actually want to do this.</TextBlock>
+                  </StackPanel>
+                </TabItem>
+              </TabControl>
+
+              <Button Grid.Row="1" 
                       Style="{StaticResource NavButtonStyle}" 
                       VerticalAlignment="Center" 
                       IsEnabled="{Binding CanStart}"
                       Command="{Binding StartCommand}"
-                      >START</Button>
+              >START</Button>
             </Grid>
           </TabItem>
           <TabItem>

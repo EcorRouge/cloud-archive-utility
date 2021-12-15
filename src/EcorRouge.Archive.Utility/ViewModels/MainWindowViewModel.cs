@@ -179,16 +179,22 @@ namespace EcorRouge.Archive.Utility.ViewModels
                     MaximumFiles = _savedState.MaximumFiles;
                     MaximumArchiveSizeMb = _savedState.MaximumArchiveSizeMb;
 
-                    SelectedProviderIndex = CloudProviders.IndexOf(_savedState.PluginType);
-                    var providerProperties = _savedState.GetPluginProperties();
-                    foreach (var property in Properties)
-                    {
-                        if(!providerProperties.ContainsKey(property.Name))
-                            continue;
+                    SelectedModeIndex = _savedState.SelectedMode;
 
-                        property.Value = providerProperties[property.Name]?.ToString();
+                    if (SelectedModeIndex == MODE_UPLOAD)
+                    {
+                        SelectedProviderIndex = CloudProviders.IndexOf(_savedState.PluginType);
+                        var providerProperties = _savedState.GetPluginProperties();
+                        foreach (var property in Properties)
+                        {
+                            if (!providerProperties.ContainsKey(property.Name))
+                                continue;
+
+                            property.Value = providerProperties[property.Name]?.ToString();
+                        }
+
+                        OnPropertyChanged(nameof(Properties));
                     }
-                    OnPropertyChanged(nameof(Properties));
 
                     SelectedPageIndex = TAB_PROGRESS;
 
@@ -217,7 +223,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
                         }
                     }
 
-                    StartArchiving();
+                    StartArchiving(true);
                 }
             }
         }
