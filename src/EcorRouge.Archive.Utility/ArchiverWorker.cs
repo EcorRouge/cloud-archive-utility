@@ -48,6 +48,8 @@ namespace EcorRouge.Archive.Utility
         private long _bytesUploaded = 0;
         private double _uploadProgress = 0;
 
+        private string _manifestFileName;
+        private StreamWriter _manifestWriter;
         private StreamWriter _skippedListFile;
         private string _metaFileName;
         private StreamWriter _metaFile;
@@ -183,6 +185,26 @@ namespace EcorRouge.Archive.Utility
 
             ChangeState(ArchiverState.Initializing);
 
+            if (!_savedState.IsEmpty)
+            {
+                _manifestFileName = _savedState.ManifestFileName;
+                _manifestWriter = new StreamWriter(_manifestFileName, true, Encoding.UTF8);
+            }
+            else
+            {
+                _manifestFileName = Path.Combine(PathHelper.GetTempPath(true), $"_manifest-{DateTime.Now:yyyy-MM-dd-HH-mm}.txt");
+
+                if (File.Exists(_manifestFileName))
+                {
+                    File.Delete(_manifestFileName);
+                }
+
+                _manifestWriter = new StreamWriter(_manifestFileName, false, Encoding.UTF8);
+            }
+
+            _savedState.ManifestFileName = _manifestFileName;
+            _savedState.Save();
+
             if (_plugin != null)
             {
                 try
@@ -210,11 +232,8 @@ namespace EcorRouge.Archive.Utility
                     await _plugin.OpenSessionAsync(_pluginProperties, cancellationToken);
                 }
 
-                if (_plugin != null)
-                {
-                    OpenZipFile();
-                }
-                else
+               
+                if(_plugin == null)
                 {
                     _filesInArchive = _savedState.TotalFilesToArchive;
                     _deletedFilesCount = 0;
@@ -254,6 +273,11 @@ namespace EcorRouge.Archive.Utility
 
                 while ((entry = parser.GetNextEntry()) != null && !cancellationToken.IsCancellationRequested)
                 {
+                    if (_plugin != null && _zipFile == null)
+                    {
+                        OpenZipFile();
+                    }
+
                     ChangeState(_plugin == null ? ArchiverState.Deleting : ArchiverState.Archiving);
 
                     try
@@ -278,8 +302,6 @@ namespace EcorRouge.Archive.Utility
                         {
                             await FlushArchive(cancellationToken);
 
-                            OpenZipFile();
-
                             ArchiveFileProgress = 0;
                             ArchivingProgress?.Invoke(this, EventArgs.Empty);
                         }
@@ -292,6 +314,8 @@ namespace EcorRouge.Archive.Utility
                 {
                     await FlushArchive(cancellationToken);
                 }
+
+                await UploadManifest(cancellationToken);
 
                 SavedState.Clear();
             }
@@ -348,6 +372,8 @@ namespace EcorRouge.Archive.Utility
             var newFileName = guid + Path.GetExtension(fileName);
 
             _metaFile.WriteLine($"{newFileName}|{fInfo.Length}|{fInfo.CreationTime.ToUnixTime()}|{fileName}");
+
+            _manifestWriter.WriteLine($"{fileName}|{fInfo.Length}|{fInfo.CreationTime.ToUnixTime()}|{Path.GetFileName(_zipFileName)}|{newFileName}");
 
             _zipFile.PutNextEntry(newFileName);
             WriteFileStream(fileName, fInfo.Length, cancellationToken);
@@ -408,7 +434,7 @@ namespace EcorRouge.Archive.Utility
             }
         }
 
-        private async Task UploadArchiveWithRetries(CancellationToken cancellationToken)
+        private async Task UploadArchiveWithRetries(string zipFileName, CancellationToken cancellationToken)
         {
             int retryAttempts = 0;
 
@@ -444,7 +470,7 @@ namespace EcorRouge.Archive.Utility
 
                     try
                     {
-                        await _plugin.UploadFileAsync(_zipFileName, cancellationToken);
+                        await _plugin.UploadFileAsync(zipFileName, cancellationToken);
                         success = true;
                     }
                     finally
@@ -466,8 +492,47 @@ namespace EcorRouge.Archive.Utility
             }
         }
 
+        private async Task UploadManifest(CancellationToken cancellationToken)
+        {
+            _manifestWriter.Close();
+
+            var zipFileName = Path.Combine(PathHelper.GetTempPath(), Path.GetFileNameWithoutExtension(_manifestFileName) + ".zip");
+
+            using (var zip = new ZipFile())
+            {
+                zip.UseZip64WhenSaving = Zip64Option.Always;
+                zip.AddFile(_manifestFileName, "");
+                zip.Save(zipFileName);
+            }
+
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                await UploadArchiveWithRetries(zipFileName, cancellationToken);
+            }
+
+            try
+            {
+                File.Delete(_manifestFileName);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error deleting manifest", ex);
+            }
+            try
+            {
+                File.Delete(zipFileName);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error deleting manifest archive", ex);
+            }
+        }
+
         private async Task FlushArchive(CancellationToken cancellationToken)
         {
+            if (_zipFile == null)
+                return; // Already flushed
+
             _metaFile.Close();
             await _metaFile.DisposeAsync();
 
@@ -477,12 +542,14 @@ namespace EcorRouge.Archive.Utility
             _zipFile.Close();
             await _zipFile.DisposeAsync();
 
+            _zipFile = null;
+
             _totalArchiveSize += new FileInfo(_zipFileName).Length;
 
             // upload
             if (!cancellationToken.IsCancellationRequested)
             {
-                await UploadArchiveWithRetries(cancellationToken);
+                await UploadArchiveWithRetries(_zipFileName, cancellationToken);
             }
 
             // delete meta file

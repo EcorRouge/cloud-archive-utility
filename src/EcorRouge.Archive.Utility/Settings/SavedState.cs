@@ -20,6 +20,7 @@ namespace EcorRouge.Archive.Utility.Settings
         public long TotalArchivedSize { get; set; }
         public long TotalFilesToArchive { get; set; }
         public long TotalFilesSizeToArchive { get; set; }
+        public string ManifestFileName { get; set; }
         public string ArchiveFileName { get; set; }
 
         public string PluginType { get; set; }
