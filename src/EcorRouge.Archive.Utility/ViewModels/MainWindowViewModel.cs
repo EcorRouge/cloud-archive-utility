@@ -104,25 +104,24 @@ namespace EcorRouge.Archive.Utility.ViewModels
             {
                 if (_worker?.IsBusy ?? false)
                 {
-                    if (!ConfirmInterrupt())
-                    {
-                        return;
-                    }
+                    ConfirmInterrupt(() => { SelectedPageIndex = TAB_SELECT_FILE; });
                 }
-                SelectedPageIndex = TAB_SELECT_FILE;
+                else
+                {
+                    SelectedPageIndex = TAB_SELECT_FILE;
+                }
             });
 
             SelectSettingsCommand = new RelayCommand(() =>
             {
                 if (_worker?.IsBusy ?? false)
                 {
-                    if (!ConfirmInterrupt())
-                    {
-                        return;
-                    }
+                    ConfirmInterrupt(() => { SelectedPageIndex = TAB_SETTINGS; });
                 }
-
-                SelectedPageIndex = TAB_SETTINGS;
+                else
+                {
+                    SelectedPageIndex = TAB_SETTINGS;
+                }
             });
 
             SelectProgressCommand = new RelayCommand(() =>
@@ -154,77 +153,81 @@ namespace EcorRouge.Archive.Utility.ViewModels
             InitProgressPage();
         }
 
-        public void CheckSavedState(Window owner)
+        private void ClearState()
+        {
+            SavedState.Clear();
+
+            _savedState = new SavedState()
+            {
+                IsEmpty = true
+            };
+        }
+
+        public void CheckSavedState()
         {
             if (!_savedState.IsEmpty)
             {
-                if (MessageBox.Show(owner,
+                DisplayYesNoDialog(
+                    "Confirm restore",
                     "Previous unfinished archive session was detected. Do you want to recover it and continue where it stopped?",
-                    "Confirm continue", MessageBoxButton.YesNoCancel) != MessageBoxResult.Yes)
-                {
-                    SavedState.Clear();
-
-                    _savedState = new SavedState()
+                    () =>
                     {
-                        IsEmpty = true
-                    };
-                }
-                else
-                {
-                    FileName = _savedState.InputFileName;
+                        FileName = _savedState.InputFileName;
 
-                    TotalFilesToArchive = _savedState.TotalFilesToArchive;
-                    TotalFileSizeToArchive = _savedState.TotalFilesSizeToArchive;
-                    DeleteFilesAfterUpload = _savedState.DeleteFiles;
-                    MaximumFiles = _savedState.MaximumFiles;
-                    MaximumArchiveSizeMb = _savedState.MaximumArchiveSizeMb;
+                        TotalFilesToArchive = _savedState.TotalFilesToArchive;
+                        TotalFileSizeToArchive = _savedState.TotalFilesSizeToArchive;
+                        DeleteFilesAfterUpload = _savedState.DeleteFiles;
+                        MaximumFiles = _savedState.MaximumFiles;
+                        MaximumArchiveSizeMb = _savedState.MaximumArchiveSizeMb;
 
-                    SelectedModeIndex = _savedState.SelectedMode;
+                        SelectedModeIndex = _savedState.SelectedMode;
 
-                    if (SelectedModeIndex == MODE_UPLOAD)
-                    {
-                        SelectedProviderIndex = CloudProviders.IndexOf(_savedState.PluginType);
-                        var providerProperties = _savedState.GetPluginProperties();
-                        foreach (var property in Properties)
+                        if (SelectedModeIndex == MODE_UPLOAD)
                         {
-                            if (!providerProperties.ContainsKey(property.Name))
-                                continue;
+                            SelectedProviderIndex = CloudProviders.IndexOf(_savedState.PluginType);
+                            var providerProperties = _savedState.GetPluginProperties();
+                            foreach (var property in Properties)
+                            {
+                                if (!providerProperties.ContainsKey(property.Name))
+                                    continue;
 
-                            property.Value = providerProperties[property.Name]?.ToString();
+                                property.Value = providerProperties[property.Name]?.ToString();
+                            }
+
+                            OnPropertyChanged(nameof(Properties));
                         }
 
-                        OnPropertyChanged(nameof(Properties));
-                    }
+                        SelectedPageIndex = TAB_PROGRESS;
 
-                    SelectedPageIndex = TAB_PROGRESS;
+                        CanSelectFile = true;
+                        CanSelectSettings = false;
+                        CanSelectProgress = true;
+                        CanSelectFinish = false;
 
-                    CanSelectFile = true;
-                    CanSelectSettings = false;
-                    CanSelectProgress = true;
-                    CanSelectFinish = false;
-
-                    if (!String.IsNullOrEmpty(FileName))
-                    {
-                        try
+                        if (!String.IsNullOrEmpty(FileName))
                         {
-                            _inputFile = InputFileParser.ScanFile(FileName);
+                            try
+                            {
+                                _inputFile = InputFileParser.ScanFile(FileName);
 
-                            TotalFilesToArchive = _inputFile.TotalFiles;
-                            TotalFileSizeToArchive = _inputFile.TotalFilesSize;
+                                TotalFilesToArchive = _inputFile.TotalFiles;
+                                TotalFileSizeToArchive = _inputFile.TotalFilesSize;
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error($"Error parsing {FileName}", ex);
+
+                                FileName = null;
+                                CanSelectProgress = false;
+
+                                return;
+                            }
                         }
-                        catch (Exception ex)
-                        {
-                            log.Error($"Error parsing {FileName}", ex);
 
-                            FileName = null;
-                            CanSelectProgress = false;
-
-                            return;
-                        }
-                    }
-
-                    StartArchiving(true);
-                }
+                        StartArchiving(true);
+                    },
+                    ClearState, ClearState
+                    );
             }
         }
     }

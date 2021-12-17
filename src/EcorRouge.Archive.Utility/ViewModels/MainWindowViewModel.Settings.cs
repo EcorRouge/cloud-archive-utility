@@ -100,6 +100,8 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
             SubscribeProperties();
 
+            OnPropertyChanged(nameof(Properties));
+
             CanStart = CheckCanStart();
         }
 

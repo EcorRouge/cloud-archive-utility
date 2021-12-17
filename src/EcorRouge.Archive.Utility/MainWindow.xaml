@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:EcorRouge.Archive.Utility"
         xmlns:designvm="clr-namespace:EcorRouge.Archive.Utility.ViewModels.Design"
         xmlns:converters="clr-namespace:EcorRouge.Archive.Utility.Converters"
+        xmlns:controls="clr-namespace:EcorRouge.Archive.Utility.Controls"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=designvm:MainWindowViewModelDesign, IsDesignTimeCreatable=True}"
         Height="600" Width="800"
@@ -239,6 +240,27 @@
           </TabItem>
         </TabControl>
       </Border>
+
+      <Border Grid.Row="1" Grid.ColumnSpan="2" Background="Black" Opacity="0.5" Visibility="{Binding ShowDialogShadow, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+      
+      <controls:YesNoDialog 
+        Grid.Row="1" Grid.Column="2" Width="250" Height="150" 
+        Visibility="{Binding ShowYesNoDialog, Converter={StaticResource BooleanToVisibilityConverter}}" 
+        Text="{Binding DialogText}" 
+        Title="{Binding DialogTitle}" 
+        YesCommand="{Binding DialogYesCommand}"
+        NoCommand="{Binding DialogNoCommand}"
+        CancelCommand="{Binding DialogCancelCommand}"
+        />
+
+      <controls:OkDialog 
+        Grid.Row="1" Grid.Column="2" Width="250" Height="150" 
+        Visibility="{Binding ShowOkDialog, Converter={StaticResource BooleanToVisibilityConverter}}" 
+        Text="{Binding DialogText}" 
+        Title="{Binding DialogTitle}" 
+        OkCommand="{Binding DialogOkCommand}"
+        />
+
     </Grid>
   </Border>
 </Window>

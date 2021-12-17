@@ -19,7 +19,7 @@ namespace EcorRouge.Archive.Utility
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            (DataContext as MainWindowViewModel).CheckSavedState(this);
+            (DataContext as MainWindowViewModel)?.CheckSavedState();
         }
 
         private void MainWindow_OnMouseDown(object sender, MouseButtonEventArgs e)

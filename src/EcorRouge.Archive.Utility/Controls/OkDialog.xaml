@@ -1,0 +1,28 @@
+﻿<UserControl x:Class="EcorRouge.Archive.Utility.Controls.OkDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="110" d:DesignWidth="300" x:Name="OkDialogControl">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="20"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="10"/>
+    </Grid.RowDefinitions>
+
+    <Border CornerRadius="8,8,0,0" Background="{StaticResource MainWindowBackgroundTitleBrush}">
+      <TextBlock Foreground="White" Margin="8,0,0,0" VerticalAlignment="Center" Text="{Binding Title, ElementName=OkDialogControl}"/>
+    </Border>
+
+    <Border Grid.Row="1" CornerRadius="0, 0, 8, 8" Background="White">
+      <StackPanel Orientation="Vertical" Margin="8">
+        <TextBlock TextWrapping="Wrap" HorizontalAlignment="Center" Text="{Binding Text, ElementName=OkDialogControl}"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,8" VerticalAlignment="Bottom">
+          <Button Margin="4" Content="Ok" Style="{StaticResource DialogButtonStyle}" Command="{Binding OkCommand, ElementName=OkDialogControl}"/>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>

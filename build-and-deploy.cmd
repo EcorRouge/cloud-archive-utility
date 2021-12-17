@@ -73,8 +73,10 @@ IF %SIGNING_MODE%==sign (
 
 rmdir /s /q build\net5.0-windows\publish\plugins
 mkdir build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.S3
+mkdir build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.Local
 
 xcopy /y build\plugins\EcorRouge.Archive.Utility.Plugins.S3\net5.0\publish\* build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.S3\
+xcopy /y build\plugins\EcorRouge.Archive.Utility.Plugins.Local\net5.0\publish\* build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.Local\
 
 pushd build\net5.0-windows\publish
 %ZIP_PATH% a -r ..\..\..\deploy\archive-utility-%NEW_VERSION%.zip *.*

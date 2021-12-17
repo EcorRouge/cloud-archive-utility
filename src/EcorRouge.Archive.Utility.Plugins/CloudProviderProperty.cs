@@ -19,6 +19,7 @@ namespace EcorRouge.Archive.Utility.Plugins
         String,
         Integer,
         Double,
-        Password
+        Password,
+        FolderPath
     }
 }

@@ -33,6 +33,12 @@ namespace EcorRouge.Archive.Utility.ViewModels.Design
             UploadProgress = 37.0;
             DeleteProgress = 1.0;
             TotalProgress = 12.0;
+
+            ShowDialogShadow = true;
+            ShowYesNoDialog = true;
+
+            DialogTitle = "Confirm eating";
+            DialogText = "Are you sure want to eat this cake? It contains a lot of sugar!";
         }
     }
 }

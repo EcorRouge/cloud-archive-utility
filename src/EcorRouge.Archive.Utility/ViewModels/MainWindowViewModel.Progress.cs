@@ -116,21 +116,23 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private void CancelProgress()
         {
             if(_worker?.IsBusy ?? false)
-                ConfirmInterrupt();
+                ConfirmInterrupt(() => { });
         }
 
-        public bool ConfirmInterrupt()
+        public void ConfirmInterrupt(Action confirmAction)
         {
-            var result = MessageBox.Show("Current archiving will be interrupted, do you want to continue?",
-                "Confirm interrupt", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes;
+            DisplayYesNoDialog(
+                "Confirm interrupt",
+                "Current archiving will be interrupted, do you want to continue?",
+                () =>
+                {
+                    CanCancelProcess = false;
+                    _worker?.Cancel();
 
-            if (result)
-            {
-                CanCancelProcess = false;
-                _worker?.Cancel();
-            }
-
-            return result;
+                    confirmAction();
+                },
+                () => { }, () => { }
+            );
         }
 
         public void StartArchiving()
@@ -144,14 +146,15 @@ namespace EcorRouge.Archive.Utility.ViewModels
             {
                 var sizeStr = FileSizeFormatter.Format(TotalFileSizeToArchive);
 
-                if (MessageBox.Show(
-                    $"Your are going to remove {TotalFilesToArchive} files, {sizeStr} of data. This operation cannot be undone. Are you sure want to continue?",
+                DisplayYesNoDialog(
                     "Delete warning",
-                    MessageBoxButton.YesNoCancel
-                ) != MessageBoxResult.Yes)
-                {
-                    return;
-                }
+                    $"Your are going to remove {TotalFilesToArchive} files, {sizeStr} of data. This operation cannot be undone. Are you sure want to continue?",
+                    () => { StartArchiving(true); },
+                    () => { },
+                    () => { }
+                    );
+
+                return;
             }
 
             if (SelectedModeIndex == MODE_UPLOAD && (SelectedProviderIndex < 0 || SelectedProviderIndex >= PluginsManager.Instance.Plugins.Count))
@@ -161,7 +164,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
             PluginBase plugin = null;
 
-            Dictionary<string, object> values;
+            Dictionary<string, object> values = null;
             if (SelectedModeIndex == MODE_UPLOAD)
             {
                 plugin = PluginsManager.Instance.Plugins[SelectedProviderIndex];
@@ -181,21 +184,26 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 {
                     var sizeStr = FileSizeFormatter.Format(size);
 
-                    if (MessageBox.Show(
-                        $"There's no enough space on current drive to fit archives.\nSpace remaining: {sizeStr}. Archive size configured: {MaximumArchiveSizeMb} Mb. Are you sure want to continue?",
+                    DisplayYesNoDialog(
                         "Low space warning",
-                        MessageBoxButton.YesNoCancel
-                    ) != MessageBoxResult.Yes)
-                    {
-                        return;
-                    }
+                        $"There's no enough space on current drive to fit archives.\nSpace remaining: {sizeStr}. Archive size configured: {MaximumArchiveSizeMb} Mb. Are you sure want to continue?",
+                        () =>
+                        {
+                            StartArchivingInternal(plugin, values);
+                        },
+                        () => { },
+                        () => { }
+                        );
+
+                    return;
                 }
             }
-            else
-            {
-                values = null;
-            }
 
+            StartArchivingInternal(plugin, values);
+        }
+
+        private void StartArchivingInternal(PluginBase plugin, Dictionary<string, object> values)
+        {
             ArchivingLabel = "Initializing...";
             CanSelectSettings = false;
             CanSelectProgress = true;
@@ -243,7 +251,8 @@ namespace EcorRouge.Archive.Utility.ViewModels
                     CanSelectSettings = true;
                     CanSelectProgress = false;
                     SelectedPageIndex = TAB_SETTINGS;
-                    MessageBox.Show("Error testing cloud provider credentials!");
+
+                    DisplayOkDialog("Error", "Error testing cloud provider credentials!", () => { });
                     break;
                 case ArchiverState.Archiving:
                     UploadingVisible = false;
