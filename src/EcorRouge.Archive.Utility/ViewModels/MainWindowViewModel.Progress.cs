@@ -124,6 +124,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             DisplayYesNoDialog(
                 "Confirm interrupt",
                 "Current archiving will be interrupted, do you want to continue?",
+                150,
                 () =>
                 {
                     CanCancelProcess = false;
@@ -149,6 +150,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 DisplayYesNoDialog(
                     "Delete warning",
                     $"Your are going to remove {TotalFilesToArchive} files, {sizeStr} of data. This operation cannot be undone. Are you sure want to continue?",
+                    250,
                     () => { StartArchiving(true); },
                     () => { },
                     () => { }
@@ -187,6 +189,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
                     DisplayYesNoDialog(
                         "Low space warning",
                         $"There's no enough space on current drive to fit archives.\nSpace remaining: {sizeStr}. Archive size configured: {MaximumArchiveSizeMb} Mb. Are you sure want to continue?",
+                        250,
                         () =>
                         {
                             StartArchivingInternal(plugin, values);

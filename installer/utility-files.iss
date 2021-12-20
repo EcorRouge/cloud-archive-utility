@@ -12,6 +12,7 @@ Source: "..\build\net5.0-windows\publish\Microsoft.DotNet.PlatformAbstractions.d
 Source: "..\build\net5.0-windows\publish\Microsoft.Extensions.DependencyModel.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\build\net5.0-windows\publish\Microsoft.Toolkit.Mvvm.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\build\net5.0-windows\publish\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\net5.0-windows\publish\Ookii.Dialogs.Wpf.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.Local\EcorRouge.Archive.Utility.Plugins.dll"; DestDir: "{app}\plugins\EcorRouge.Archive.Utility.Plugins.Local"; Flags: ignoreversion
 Source: "..\build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.Local\EcorRouge.Archive.Utility.Plugins.Local.deps.json"; DestDir: "{app}\plugins\EcorRouge.Archive.Utility.Plugins.Local"; Flags: ignoreversion
 Source: "..\build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.Local\EcorRouge.Archive.Utility.Plugins.Local.dll"; DestDir: "{app}\plugins\EcorRouge.Archive.Utility.Plugins.Local"; Flags: ignoreversion

@@ -15,6 +15,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private bool _showFolderDialog;
         private string _dialogTitle;
         private string _dialogText;
+        private int _dialogHeight;
 
         private RelayCommand _dialogOkCommand;
         private RelayCommand _dialogYesCommand;
@@ -81,7 +82,13 @@ namespace EcorRouge.Archive.Utility.ViewModels
             set => SetProperty(ref _dialogText, value);
         }
 
-        public void DisplayYesNoDialog(string title, string text, Action yesCallback, Action noCallback, Action cancelCallback)
+        public int DialogHeight
+        {
+            get => _dialogHeight;
+            set => SetProperty(ref _dialogHeight, value);
+        }
+        
+        public void DisplayYesNoDialog(string title, string text, int height, Action yesCallback, Action noCallback, Action cancelCallback)
         {
             ShowDialogShadow = true;
             ShowYesNoDialog = true;
@@ -89,6 +96,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
             DialogTitle = title;
             DialogText = text;
+            DialogHeight = height;
 
             DialogYesCommand = new RelayCommand(() =>
             {

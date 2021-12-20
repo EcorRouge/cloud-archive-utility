@@ -170,6 +170,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 DisplayYesNoDialog(
                     "Confirm restore",
                     "Previous unfinished archive session was detected. Do you want to recover it and continue where it stopped?",
+                    250,
                     () =>
                     {
                         FileName = _savedState.InputFileName;

@@ -33,12 +33,12 @@
         <RowDefinition />
       </Grid.RowDefinitions>
 
-      <Border Background="{StaticResource MainWindowBackgroundTitleBrush}" CornerRadius="8,0,0,0">
-        <!--<Image Source="{StaticResource WhiteLogo}" HorizontalAlignment="Left" Margin="10,5,0,5"/>-->
-      </Border>
+      <!--<Border Background="{StaticResource MainWindowBackgroundTitleBrush}" CornerRadius="8,0,0,0">
+        <Image Source="{StaticResource WhiteLogo}" HorizontalAlignment="Left" Margin="10,5,0,5"/>
+      </Border>-->
 
-      <Border Grid.Row="0" Grid.Column="1" Background="{StaticResource MainWindowBackgroundTitleBrush}" CornerRadius="0,8,0,0">
-        <TextBlock Style="{StaticResource HeaderStyle1}" Text="EcorRouge Archive Utility" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Background="{StaticResource MainWindowBackgroundTitleBrush}" CornerRadius="0,8,0,0">
+        <TextBlock Style="{StaticResource HeaderStyle1}" Text="Archive Utility" HorizontalAlignment="Center" VerticalAlignment="Center"/>
       </Border>
 
       <Border Grid.Row="1" Grid.Column="0" Background="{StaticResource NavbarBrush}" CornerRadius="0,0,0,8">
@@ -57,13 +57,13 @@
                          Command="{Binding SelectFileCommand}"
             />
             <RadioButton Style="{StaticResource NavItemStyle}" 
-                         ToolTip="Import settings" 
+                         ToolTip="Settings" 
                          IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=1}" 
                          IsEnabled="{Binding CanSelectSettings}"
                          Command="{Binding SelectSettingsCommand}"
                          />
             <RadioButton Style="{StaticResource NavItemStyle}" 
-                         ToolTip="Import progress" IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=2}" 
+                         ToolTip="Progress" IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=2}" 
                          IsEnabled="{Binding CanSelectProgress}"
                          Command="{Binding SelectProgressCommand}"
                          />
@@ -110,7 +110,7 @@
               </StackPanel>
 
               <Button Grid.Row="6" 
-                      Style="{StaticResource NavButtonStyle}" 
+                      Style="{StaticResource ContinueButtonStyle}" 
                       VerticalAlignment="Center"
                       Visibility="{Binding CanSelectSettings, Converter={StaticResource BooleanToVisibilityConverter}}"
                       Command="{Binding SelectSettingsCommand}"
@@ -127,7 +127,7 @@
               <TabControl Margin="4" Style="{StaticResource RightTabControlStyle}" SelectedIndex="{Binding SelectedModeIndex}">
                 <TabItem>
                   <TabItem.Header>
-                    <TextBlock Style="{StaticResource TabItemText}">Upload files to the Cloud</TextBlock>
+                    <TextBlock Style="{StaticResource TabItemText}">Compress and Upload Files</TextBlock>
                   </TabItem.Header>
                   <Grid Margin="24">
                     <Grid.RowDefinitions>
@@ -147,10 +147,10 @@
                       <TextBox Width="50" Margin="22,0,0,0" Text="{Binding MaximumArchiveSizeMb}"/>
                     </StackPanel>
                     <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
-                      <TextBlock>Cloud provider:</TextBlock>
+                      <TextBlock>Destination:</TextBlock>
                       <ComboBox Width="150" Margin="19,0,0,0" ItemsSource="{Binding CloudProviders}" SelectedIndex="{Binding SelectedProviderIndex}"/>
                     </StackPanel>
-                    <GroupBox Grid.Row="3" Header="Cloud provider settings">
+                    <GroupBox Grid.Row="3" Header="Destination Settings">
                       <ItemsControl ItemsSource="{Binding Properties}">
                         <ItemsControl.ItemTemplate>
                           <DataTemplate>
@@ -164,8 +164,16 @@
                                 <TextBlock Text=":"/>
                               </StackPanel>
 
-                              <TextBox Grid.Column="1" Margin="16,0,0,0" Text="{Binding Value}" VerticalAlignment="Center"/>
+                              <TextBox Grid.Column="1" Margin="16,0,0,0" Text="{Binding Value}" VerticalAlignment="Center" Visibility="{Binding IsText, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
+                              <Grid Grid.Column="1" Margin="16,0,0,0" Visibility="{Binding IsFolder, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions>
+                                  <ColumnDefinition Width="*"/>
+                                  <ColumnDefinition Width="30"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding Value}" VerticalAlignment="Center" IsReadOnly="True"/>
+                                <Button Grid.Column="1" Command="{Binding ChooseFolderCommand}">...</Button>
+                              </Grid>
                             </Grid>
                           </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -188,7 +196,7 @@
               </TabControl>
 
               <Button Grid.Row="1" 
-                      Style="{StaticResource NavButtonStyle}" 
+                      Style="{StaticResource StartButtonStyle}" 
                       VerticalAlignment="Center" 
                       IsEnabled="{Binding CanStart}"
                       Command="{Binding StartCommand}"
@@ -220,7 +228,7 @@
               <TextBlock Grid.Row="8" HorizontalAlignment="Center" Text="{Binding TotalLabel}" />
               <ProgressBar Grid.Row="9" Height="5" VerticalAlignment="Top" Maximum="100" Value="{Binding TotalProgress}"/>
 
-              <Button Grid.Row="10" Style="{StaticResource NavButtonStyle}" VerticalAlignment="Center" Command="{Binding CancelProgressCommand}">Cancel</Button>
+              <Button Grid.Row="10" Style="{StaticResource CancelButtonStyle}" VerticalAlignment="Center" Command="{Binding CancelProgressCommand}">Cancel</Button>
             </Grid>
           </TabItem>
           <TabItem>
@@ -244,7 +252,7 @@
       <Border Grid.Row="1" Grid.ColumnSpan="2" Background="Black" Opacity="0.5" Visibility="{Binding ShowDialogShadow, Converter={StaticResource BooleanToVisibilityConverter}}"/>
       
       <controls:YesNoDialog 
-        Grid.Row="1" Grid.Column="2" Width="250" Height="150" 
+        Grid.Row="1" Grid.Column="2" Width="250" Height="{Binding DialogHeight}" 
         Visibility="{Binding ShowYesNoDialog, Converter={StaticResource BooleanToVisibilityConverter}}" 
         Text="{Binding DialogText}" 
         Title="{Binding DialogTitle}" 
