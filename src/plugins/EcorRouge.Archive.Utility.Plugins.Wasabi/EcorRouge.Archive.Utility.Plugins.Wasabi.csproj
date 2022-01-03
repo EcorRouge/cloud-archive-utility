@@ -5,17 +5,15 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\..\..\build\plugins\EcorRouge.Archive.Utility.Plugins.S3</OutputPath>
+    <OutputPath>..\..\..\build\plugins\EcorRouge.Archive.Utility.Plugins.Wasabi</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>..\..\..\build\plugins\EcorRouge.Archive.Utility.Plugins.S3</OutputPath>
+    <OutputPath>..\..\..\build\plugins\EcorRouge.Archive.Utility.Plugins.Wasabi</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.7.5">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-    </PackageReference>
+    <PackageReference Include="AWSSDK.S3" Version="3.7.7.5" />
   </ItemGroup>
 
   <ItemGroup>
