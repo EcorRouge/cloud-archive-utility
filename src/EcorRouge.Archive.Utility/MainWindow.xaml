@@ -37,11 +37,11 @@
         <Image Source="{StaticResource WhiteLogo}" HorizontalAlignment="Left" Margin="10,5,0,5"/>
       </Border>-->
 
-      <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Background="{StaticResource MainWindowBackgroundTitleBrush}" CornerRadius="0,8,0,0">
+      <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Background="{StaticResource MainWindowBackgroundTitleBrush}" CornerRadius="8,8,0,0">
         <TextBlock Style="{StaticResource HeaderStyle1}" Text="Archive Utility" HorizontalAlignment="Center" VerticalAlignment="Center"/>
       </Border>
 
-      <Border Grid.Row="1" Grid.Column="0" Background="{StaticResource NavbarBrush}" CornerRadius="0,0,0,8">
+      <Border Grid.Row="1" Grid.Column="0" Background="{StaticResource NavbarBrush}" CornerRadius="0,0,0,8" BorderThickness="1,0,0,1" BorderBrush="LightGray">
         <Grid>
           <Grid.RowDefinitions>
             <RowDefinition />
@@ -78,8 +78,8 @@
           <Button Grid.Row="1" Style="{StaticResource NavButtonStyle}" Command="{Binding ExitCommand}">Exit</Button>
         </Grid>
       </Border>
-      
-      <Border Grid.Row="1" Grid.Column="1" CornerRadius="0,0,8,0" Background="White">
+
+      <Border Grid.Row="1" Grid.Column="1" CornerRadius="0,0,8,0" Background="White" BorderThickness="0,0,1,1" BorderBrush="LightGray">
         <TabControl Style="{StaticResource TabControlStyle}" SelectedIndex="{Binding SelectedPageIndex}">
           <TabItem>
             <Grid Margin="24">
@@ -249,7 +249,7 @@
         </TabControl>
       </Border>
 
-      <Border Grid.Row="1" Grid.ColumnSpan="2" Background="Black" Opacity="0.5" Visibility="{Binding ShowDialogShadow, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+      <Border CornerRadius="0,0,8,8" Grid.Row="1" Grid.ColumnSpan="2" Background="Black" Opacity="0.5" Visibility="{Binding ShowDialogShadow, Converter={StaticResource BooleanToVisibilityConverter}}"/>
       
       <controls:YesNoDialog 
         Grid.Row="1" Grid.Column="2" Width="250" Height="{Binding DialogHeight}" 
