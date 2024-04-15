@@ -52,7 +52,7 @@ Name: "{app}"; Permissions: everyone-modify;
 [Files]
 #include "utility-files.iss"
 
-Source: "binaries\windowsdesktop-runtime-5.0.9-win-x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall dontcopy
+Source: "binaries\windowsdesktop-runtime-7.0.4-win-x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall dontcopy
 Source: "binaries\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall dontcopy
 
 [Code]
@@ -105,9 +105,9 @@ begin
         Exec(ExpandConstant('{tmp}\vc_redist.x64.exe'), '/install /passive /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 
         if not IsDotNetDetected('5.0') then begin
-           WizardForm.StatusLabel.Caption := 'Installing .Net Core 5.0 runtime';
-           ExtractTemporaryFile('windowsdesktop-runtime-5.0.9-win-x64.exe');
-           Exec(ExpandConstant('{tmp}\windowsdesktop-runtime-5.0.9-win-x64.exe'), '/install /passive /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+           WizardForm.StatusLabel.Caption := 'Installing .Net 7.0 Windows Desktop runtime';
+           ExtractTemporaryFile('windowsdesktop-runtime-7.0.4-win-x64.exe');
+           Exec(ExpandConstant('{tmp}\windowsdesktop-runtime-7.0.4-win-x64.exe'), '/install /passive /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
         end;
     end;
 end;
