@@ -249,7 +249,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             _savedState.MaximumArchiveSizeMb = _maximumArchiveSizeMb;
             _savedState.Save();
 
-            _worker = new ArchiverWorker(plugin, _savedState, _inputFile);
+            _worker = new ArchiverWorker(plugin, sourceConnector, _savedState, _inputFile);
             _worker.StateChanged += ArchiverWorker_StateChanged;
             _worker.Completed += ArchiveWorker_Completed;
             _worker.ArchivingProgress += ArchiveWorker_ArchivingProgress;

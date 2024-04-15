@@ -339,6 +339,7 @@ namespace EcorRouge.Archive.Utility.Util
                 Path = DecodeB64IfNeeded(cloudPath ?? lastComponent),
                 FileName = DecodeB64IfNeeded(displayFilePath ?? cloudPath),
                 FileSize = fileSize,
+                CreatedAtUtc = createdAtUtc ?? modifiedAtUtc,
             };
 
             string DecodeB64IfNeeded(string target)

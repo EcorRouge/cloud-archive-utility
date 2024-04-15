@@ -62,11 +62,11 @@ namespace EcorRouge.Archive.Utility
         private List<string> _archiveFileList;
         private long _deletedFilesCount;
 
-        public EventHandler Completed;
-        public EventHandler ArchivingProgress;
-        public EventHandler UploadingProgress;
-        public EventHandler DeletingProgress;
-        public EventHandler StateChanged;
+        public event EventHandler Completed;
+        public event EventHandler ArchivingProgress;
+        public event EventHandler UploadingProgress;
+        public event EventHandler DeletingProgress;
+        public event EventHandler StateChanged;
 
         public bool IsCanceled { get; private set; }
         public bool IsBusy { get; private set; }
@@ -87,12 +87,15 @@ namespace EcorRouge.Archive.Utility
 
         public ArchiverState State { get; private set; }
 
-        public ArchiverWorker(PluginBase plugin, SavedState savedState, InputFile inputFile)
+        public string DownloadsDir { get; } = Path.Combine(PathHelper.GetTempPath(), "Downloads");
+
+        public ArchiverWorker(PluginBase plugin, ConnectorFacade connectorFacade, SavedState savedState, InputFile inputFile)
         {
             this._plugin = plugin;
             this._inputFile = inputFile;
             _savedState = savedState;
             _pluginProperties = _savedState.GetPluginProperties();
+            _connectorFacade = connectorFacade;
 
             if (_plugin != null)
             {
@@ -261,11 +264,21 @@ namespace EcorRouge.Archive.Utility
                     _filesProcessed = _savedState.FilesProcessed;
                 }
 
+                if (_connectorFacade != null)
+                {
+                    var creds = _savedState.GetConnectorProperties().ToDictionary(kv => kv.Key, kv => kv.Value?.ToString());
+                    _connectorFacade.Connect(creds);
+                    Directory.CreateDirectory(DownloadsDir);
+                }
+
                 InputFileEntry entry;
+                bool deleteOnly = _plugin == null;
 
                 while ((entry = parser.GetNextEntry()) != null && !cancellationToken.IsCancellationRequested)
                 {
                     if (_plugin != null && _zipFile == null)
+
+                    if (!deleteOnly && _zipFile == null)
                     {
                         OpenZipFile();
                     }
@@ -275,7 +288,15 @@ namespace EcorRouge.Archive.Utility
                     try
                     {
                         ArchiveFileProgress = 0;
-                        ProcessFile(entry.Path, cancellationToken);
+
+                        if (deleteOnly)
+                        {
+                            await DeleteResourceAsync(entry, cancellationToken);
+                        }
+                        else
+                        {
+                            await ProcessResourceAsync(entry, cancellationToken);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -288,7 +309,7 @@ namespace EcorRouge.Archive.Utility
 
                     ArchivingProgress?.Invoke(this, EventArgs.Empty);
 
-                    if (_plugin != null)
+                    if (!deleteOnly)
                     {
                         if (ShouldFlushZip())
                         {
@@ -341,37 +362,57 @@ namespace EcorRouge.Archive.Utility
             }
         }
 
-        private void ProcessFile(string fileName, CancellationToken cancellationToken)
+        private async ValueTask ProcessResourceAsync(InputFileEntry entry, CancellationToken cancellationToken)
         {
-            if (!File.Exists(fileName))
-                throw new FileNotFoundException("File not found", fileName);
+            string fileName = entry.Path;
+            string newFileName = Guid.NewGuid() + Path.GetExtension(fileName);
 
-            var fInfo = new FileInfo(fileName);
+            FileInfo fInfo;
+            DateTime createdAt;
 
-            if (_plugin == null) // We are deleting
+            if (_connectorFacade != null)
             {
-                var length = fInfo.Length;
-
-                File.Delete(fileName);
-
-                _deletedFilesCount++;
-                DeletingProgress?.Invoke(this, EventArgs.Empty);
-                _bytesProcessed += length;
-                return;
+                string downloadToPath = Path.Combine(DownloadsDir, newFileName);
+                await _connectorFacade.DownloadAsync(fileName, downloadToPath, cancellationToken);
+                fInfo = new FileInfo(downloadToPath);
+                createdAt = entry.CreatedAtUtc ?? fInfo.CreationTimeUtc;
+            }
+            else
+            {
+                fInfo = new FileInfo(fileName);
+                createdAt = fInfo.CreationTimeUtc;
             }
 
-            var guid = Guid.NewGuid();
-            var newFileName = guid + Path.GetExtension(fileName);
+            if (!fInfo.Exists)
+                throw new FileNotFoundException("File not found", fInfo.FullName);
 
-            _metaFile.WriteLine($"{newFileName}|{fInfo.Length}|{fInfo.CreationTime.ToUnixTime()}|{fileName}");
+            _metaFile.WriteLine($"{newFileName}|{fInfo.Length}|{createdAt.ToUnixTime()}|{fileName}");
 
-            _manifestWriter.WriteLine($"{fileName}|{fInfo.Length}|{fInfo.CreationTime.ToUnixTime()}|{Path.GetFileName(_zipFileName)}|{newFileName}");
+            _manifestWriter.WriteLine($"{fileName}|{fInfo.Length}|{createdAt.ToUnixTime()}|{Path.GetFileName(_zipFileName)}|{newFileName}");
 
             _zipFile.PutNextEntry(newFileName);
-            WriteFileStream(fileName, fInfo.Length, cancellationToken);
+            WriteFileStream(fInfo.FullName, fInfo.Length, cancellationToken);
+
+            if (_connectorFacade != null)
+            {
+                fInfo.Delete();
+            }
 
             _archiveFileList.Add(fileName);
             _bytesProcessed += fInfo.Length;
+        }
+
+        private async ValueTask DeleteResourceAsync(InputFileEntry entry, CancellationToken cancellationToken)
+        {
+            long fileSize = entry.FileSize;
+
+            if (_connectorFacade == null)
+            {
+                fileSize = new FileInfo(entry.Path).Length;
+            }
+
+            await DeleteResourceAsync(entry.Path, cancellationToken);
+            _bytesProcessed += fileSize;
         }
 
         private bool ShouldFlushZip()
@@ -578,16 +619,44 @@ namespace EcorRouge.Archive.Utility
 
             foreach (var fileName in _archiveFileList)
             {
+                await DeleteResourceAsync(fileName, cancellationToken);
+            }
+
+            // delete temporarily downloaded files which were not deleted due to processing errors
+            foreach (var file in Directory.GetFiles(DownloadsDir))
+            {
                 try
                 {
-                    File.Delete(fileName);
+                    File.Delete(file);
                 }
-                catch (Exception) {/* ignore */}
-
-                _deletedFilesCount++;
-
-                DeletingProgress?.Invoke(this, EventArgs.Empty);
+                catch (Exception ex)
+                {
+                    log.Error($"Error deleting temporary downloaded file: {file}", ex);
+                }
             }
+        }
+
+        private async ValueTask DeleteResourceAsync(string resourcePath, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (_connectorFacade != null)
+                {
+                    // TODO: to implement
+                }
+                else
+                {
+                    File.Delete(resourcePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Failed to delete {resourcePath}", ex);
+            }
+
+            _deletedFilesCount++;
+
+            DeletingProgress?.Invoke(this, EventArgs.Empty);
         }
     }
 }
