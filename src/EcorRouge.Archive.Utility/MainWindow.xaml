@@ -9,7 +9,9 @@
         xmlns:controls="clr-namespace:EcorRouge.Archive.Utility.Controls"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=designvm:MainWindowViewModelDesign, IsDesignTimeCreatable=True}"
-        Height="600" Width="800"
+        SizeToContent="Height"
+        MinHeight="600"
+        Width="800"
         WindowStyle="None"
         ResizeMode="NoResize"
         Background ="Transparent"
@@ -133,7 +135,9 @@
                     <Grid.RowDefinitions>
                       <RowDefinition Height="24"/>
                       <RowDefinition Height="24"/>
-                      <RowDefinition Height="24"/>
+                      <RowDefinition Height="36"/>
+                      <RowDefinition Height="*"/>
+                      <RowDefinition Height="36"/>
                       <RowDefinition Height="*"/>
                       <RowDefinition Height="24"/>
                       <RowDefinition Height="24"/>
@@ -146,12 +150,45 @@
                       <TextBlock>Maximum archive size, Mb:</TextBlock>
                       <TextBox Width="50" Margin="22,0,0,0" Text="{Binding MaximumArchiveSizeMb}"/>
                     </StackPanel>
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
-                      <TextBlock>Destination:</TextBlock>
-                      <ComboBox Width="150" Margin="19,0,0,0" ItemsSource="{Binding CloudProviders}" SelectedIndex="{Binding SelectedProviderIndex}"/>
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Bottom">
+                      <TextBlock>Source:</TextBlock>
+                      <ComboBox Width="150" Margin="19,0,0,0" ItemsSource="{Binding SourceCloudConnectors}" SelectedItem="{Binding SelectedConnectorType, Mode=TwoWay}"/>
                     </StackPanel>
-                    <GroupBox Grid.Row="3" Header="Destination Settings">
-                      <ItemsControl ItemsSource="{Binding Properties}">
+                    <GroupBox Grid.Row="3" Header="Source Settings">
+                        <ItemsControl ItemsSource="{Binding ConnectorProperties}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}"/>
+                                            <TextBlock Text=":"/>
+                                        </StackPanel>
+
+                                        <TextBox Grid.Column="1" Margin="16,0,0,0" Text="{Binding Value}" VerticalAlignment="Center" Visibility="{Binding IsText, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                                        <Grid Grid.Column="1" Margin="16,0,0,0" Visibility="{Binding IsFolder, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Stretch">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="30"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0" Text="{Binding Value}" VerticalAlignment="Center" IsReadOnly="True"/>
+                                            <Button Grid.Column="1" Command="{Binding ChooseFolderCommand}">...</Button>
+                                        </Grid>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </GroupBox>
+                    <StackPanel Grid.Row="4" Orientation="Horizontal" VerticalAlignment="Bottom">
+                          <TextBlock>Destination:</TextBlock>
+                          <ComboBox Width="150" Margin="19,0,0,0" ItemsSource="{Binding CloudProviders}" SelectedIndex="{Binding SelectedProviderIndex}"/>
+                    </StackPanel>
+                    <GroupBox Grid.Row="5" Header="Destination Settings">
+                      <ItemsControl ItemsSource="{Binding PluginProperties}">
                         <ItemsControl.ItemTemplate>
                           <DataTemplate>
                             <Grid Margin="5">
@@ -180,7 +217,7 @@
                       </ItemsControl>
                     </GroupBox>
 
-                    <CheckBox Grid.Row="5" IsChecked="{Binding DeleteFilesAfterUpload}">Delete files after upload</CheckBox>
+                    <CheckBox Grid.Row="7" IsChecked="{Binding DeleteFilesAfterUpload}">Delete files after upload</CheckBox>
                   </Grid>
                 </TabItem>
                 <TabItem>

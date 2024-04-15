@@ -96,6 +96,12 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 CloudProviders.Add(plugin.ProviderName);
             }
 
+            SourceCloudConnectors.Add(SettingsFile.DefaultConnectorType);
+            foreach (var connectorsFacade in CloudConnectorsManager.Instance.ConnectorsFacades)
+            {
+                SourceCloudConnectors.Add(connectorsFacade.ConnectorType);
+            }
+
             _savedState = SavedState.Load();
         }
 
@@ -187,16 +193,13 @@ namespace EcorRouge.Archive.Utility.ViewModels
                         if (SelectedModeIndex == MODE_UPLOAD)
                         {
                             SelectedProviderIndex = CloudProviders.IndexOf(_savedState.PluginType);
-                            var providerProperties = _savedState.GetPluginProperties();
-                            foreach (var property in Properties)
-                            {
-                                if (!providerProperties.ContainsKey(property.Name))
-                                    continue;
+                            SetModelValues(PluginProperties, _savedState.GetPluginProperties());
+                            OnPropertyChanged(nameof(PluginProperties));
 
-                                property.Value = providerProperties[property.Name]?.ToString();
-                            }
 
-                            OnPropertyChanged(nameof(Properties));
+                            SelectedConnectorType = _savedState.ConnectorType;
+                            SetModelValues(ConnectorProperties, _savedState.GetConnectorProperties());
+                            OnPropertyChanged(nameof(ConnectorProperties));
                         }
 
                         SelectedPageIndex = TAB_PROGRESS;
@@ -212,6 +215,11 @@ namespace EcorRouge.Archive.Utility.ViewModels
                             {
                                 string[] connectorsPrefixes = CloudConnectorsManager.Instance.ConnectorsFacades.Select(c => c.Prefix).ToArray();
                                 _inputFile = InputFileParser.ScanFile(FileName, connectorsPrefixes);
+
+                                if (_inputFile.ConnectorPrefix != null)
+                                {
+                                    SelectConnector(_inputFile.ConnectorPrefix);
+                                }
 
                                 TotalFilesToArchive = _inputFile.TotalFiles;
                                 TotalFileSizeToArchive = _inputFile.TotalFilesSize;
@@ -232,6 +240,25 @@ namespace EcorRouge.Archive.Utility.ViewModels
                     ClearState, ClearState
                     );
             }
+        }
+
+        static void SetModelValues(PropertyModel[] targetPropsModels, Dictionary<string, object> sourceProps)
+        {
+            foreach (var property in targetPropsModels)
+            {
+                if (!sourceProps.ContainsKey(property.Name))
+                    continue;
+
+                property.Value = sourceProps[property.Name]?.ToString();
+            }
+        }
+
+        private void SelectConnector(string connectorPrefix)
+        {
+            string connectorType = CloudConnectorsManager.Instance.ConnectorsFacades.First(c =>
+                string.Equals(connectorPrefix, c.Prefix, StringComparison.OrdinalIgnoreCase)).ConnectorType;
+
+            SelectedConnectorType = connectorType;
         }
     }
 }

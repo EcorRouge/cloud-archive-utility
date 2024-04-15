@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace EcorRouge.Archive.Utility.Settings
 {
     public class SavedState
     {
+        private string _connectorProperties;
+        private string _pluginProperties;
+
         [JsonIgnore]
         public bool IsEmpty { get; set; }
         public int SelectedMode { get; set; }
@@ -24,29 +24,50 @@ namespace EcorRouge.Archive.Utility.Settings
         public string ArchiveFileName { get; set; }
 
         public string PluginType { get; set; }
-        public string PluginProperties { get; set; }
+
+        public string ConnectorType { get; set; }
+
+        public string PluginProperties
+        {
+            get => _pluginProperties;
+            set => _pluginProperties = value;
+        }
+
+        public string ConnectorProperties
+        {
+            get => _connectorProperties;
+            set => _connectorProperties = value;
+        }
+
         public bool DeleteFiles { get; set; }
         public int MaximumFiles { get; set; }
         public int MaximumArchiveSizeMb { get; set; }
 
-        public void SetPluginProperties(Dictionary<string, object> pluginProperties)
+        public void SetPluginProperties(Dictionary<string, object> pluginProperties) => SetProperties(ref _pluginProperties, pluginProperties);
+
+        public Dictionary<string, object> GetPluginProperties() => GetProperties(PluginProperties);
+
+        public void SetConnectorProperties(Dictionary<string, object> connectorProperties) => SetProperties(ref _connectorProperties, connectorProperties);
+
+        public Dictionary<string, object> GetConnectorProperties() => GetProperties(ConnectorProperties);
+
+        public void SetProperties(ref string properties, Dictionary<string, object> connectorProperties)
         {
-            if (pluginProperties == null)
+            if (connectorProperties == null)
             {
-                PluginProperties = null;
+                properties = null;
                 return;
             }
 
-            PluginProperties = StringProtection.EncryptString(JsonConvert.SerializeObject(pluginProperties));
+            properties = StringProtection.EncryptString(JsonConvert.SerializeObject(connectorProperties));
         }
 
-        public Dictionary<string, object> GetPluginProperties()
+        private Dictionary<string, object> GetProperties(string properties)
         {
-            if (String.IsNullOrEmpty(PluginProperties))
+            if (String.IsNullOrEmpty(properties))
                 return new Dictionary<string, object>();
 
-            return JsonConvert.DeserializeObject<Dictionary<string, object>>(
-                StringProtection.DecryptString(PluginProperties));
+            return JsonConvert.DeserializeObject<Dictionary<string, object>>(StringProtection.DecryptString(properties));
         }
 
         [JsonIgnore]

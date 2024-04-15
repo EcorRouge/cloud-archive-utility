@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using EcorRouge.Archive.Utility.CloudConnectors;
 using Ionic.Zip;
 using log4net.Core;
 using Microsoft.Toolkit.Mvvm.Input;
@@ -165,11 +166,24 @@ namespace EcorRouge.Archive.Utility.ViewModels
             CanCancelProcess = true;
 
             PluginBase plugin = null;
+            ConnectorFacade sourceConnector = CloudConnectorsManager.Instance.GetConnectorFacade(SelectedConnectorType);
+            if (sourceConnector != null)
+            {
+                var connectorProperties = GetProperties(_connectorProperties);
+                AddPropertiesToSettings(sourceConnector.CredsType, connectorProperties);
+
+                if (_savedState.IsEmpty)
+                {
+                    _savedState.SetConnectorProperties(connectorProperties);
+                }
+
+                SettingsFile.Instance.Save();
+            }
 
             if (SelectedModeIndex == MODE_UPLOAD)
             {
                 plugin = PluginsManager.Instance.Plugins[SelectedProviderIndex];
-                var pluginProperties = GetProperties(_properties);
+                var pluginProperties = GetProperties(_pluginProperties);
                 AddPropertiesToSettings(plugin.ProviderName, pluginProperties);
 
                 if (_savedState.IsEmpty)
@@ -191,7 +205,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
                         250,
                         () =>
                         {
-                            StartArchivingInternal(plugin);
+                            StartArchivingInternal(plugin, sourceConnector);
                         },
                         () => { },
                         () => { }
@@ -201,10 +215,10 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 }
             }
 
-            StartArchivingInternal(plugin);
+            StartArchivingInternal(plugin, sourceConnector);
         }
 
-        private void StartArchivingInternal(PluginBase plugin)
+        private void StartArchivingInternal(PluginBase plugin, ConnectorFacade sourceConnector)
         {
             ArchivingLabel = "Initializing...";
             CanSelectSettings = false;
@@ -226,6 +240,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
             _savedState.SelectedMode = _selectedModeIndex;
             _savedState.PluginType = plugin?.ProviderName;
+            _savedState.ConnectorType = sourceConnector?.ConnectorType;
             _savedState.DeleteFiles = DeleteFilesAfterUpload;
             _savedState.InputFileName = _fileName;
             _savedState.TotalFilesToArchive = _totalFilesToArchive;

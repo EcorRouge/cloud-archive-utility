@@ -26,6 +26,13 @@ namespace EcorRouge.Archive.Utility
             log.Info($"Loaded {_plugins.Count} plugins");
         }
 
+        public PluginBase GetPlugin(int index)
+        {
+            if (index < 0 || index >= _plugins.Count) return null;
+
+            return Plugins[index];
+        }
+
         private void RegisterPlugins()
         {
             // Register default collector
@@ -65,6 +72,5 @@ namespace EcorRouge.Archive.Utility
                 }
             }
         }
-
     }
 }

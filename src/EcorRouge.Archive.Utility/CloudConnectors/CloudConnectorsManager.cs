@@ -18,6 +18,20 @@ public class CloudConnectorsManager
 
     private readonly List<ConnectorFacade> _connectors = new List<ConnectorFacade>();
 
+    private readonly Dictionary<string, CloudProviderProperty[]> _connectorPropertyNamesByConnectorType = new();
+
+    private readonly Dictionary<string, CloudProviderProperty[]> _connectorPropertyNamesByConnectorCommonType = new()
+    {
+        {
+            "microsoft", new CloudProviderProperty[]
+            {
+                new() {Name = "clientId", Title = "Client ID", PropertyType = CloudProviderPropertyType.String},
+                new() {Name = "clientSecret", Title = "Client Secret", PropertyType = CloudProviderPropertyType.Password},
+                new() {Name = "tenant", Title = "Tenant", PropertyType = CloudProviderPropertyType.String}
+            }
+        }
+    };
+
     private readonly Dictionary<string, char> _pathSeparatorsByConnectorType = new()
     {
         { "onedrive", ':' },
@@ -33,6 +47,30 @@ public class CloudConnectorsManager
     {
         RegisterConnectors();
         log.Info($"Loaded {_connectors.Count} connectors: {string.Join(',', _connectors.Select(c => c.ConnectorType))}");
+    }
+
+    public ConnectorFacade GetConnectorFacade(int index)
+    {
+        if (index < 0 || index >= _connectors.Count) return null;
+
+        return _connectors[index];
+    }
+
+    public ConnectorFacade GetConnectorFacade(string connectorType)
+    {
+        return _connectors.FirstOrDefault(c => string.Equals(c.ConnectorType, connectorType, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public CloudProviderProperty[] GetCredentialsNames(ConnectorFacade connector)
+    {
+        if (_connectorPropertyNamesByConnectorType.TryGetValue(connector.ConnectorType, out var credsNames))
+        {
+            return credsNames;
+        }
+
+        return _connectorPropertyNamesByConnectorCommonType.TryGetValue(connector.ConnectorCommonType, out credsNames)
+            ? credsNames
+            : Array.Empty<CloudProviderProperty>();
     }
 
     private void RegisterConnectors()
