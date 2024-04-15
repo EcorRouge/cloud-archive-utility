@@ -13,5 +13,7 @@ namespace EcorRouge.Archive.Utility.Util
         public long TotalFilesSize { get; set; }
         public bool IsZip { get; set; }
         public int Columns { get; set; }
+
+        public string ConnectorPrefix { get; set; }
     }
 }

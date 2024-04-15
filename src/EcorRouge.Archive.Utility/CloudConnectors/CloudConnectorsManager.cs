@@ -18,6 +18,13 @@ public class CloudConnectorsManager
 
     private readonly List<ConnectorFacade> _connectors = new List<ConnectorFacade>();
 
+    private readonly Dictionary<string, char> _pathSeparatorsByConnectorType = new()
+    {
+        { "onedrive", ':' },
+        { "msemail", ';'},
+        { "sharepoint", ':'}
+    };
+
     public List<ConnectorFacade> ConnectorsFacades => _connectors;
 
     public static CloudConnectorsManager Instance { get; } = new CloudConnectorsManager();
@@ -59,11 +66,17 @@ public class CloudConnectorsManager
                 {
                     if (connector.Type.EndsWith("-old", StringComparison.InvariantCultureIgnoreCase)) continue;
 
-                    _connectors.Add(new ConnectorFacade(connector));
+                    char cloudPathSeparator = GetCloudPathSeparator(connector);
+                    _connectors.Add(new ConnectorFacade(connector, cloudPathSeparator));
                 }
             }
         }
     }
+
+    private char GetCloudPathSeparator(IConnector connector)
+        => _pathSeparatorsByConnectorType.TryGetValue(connector.CommonType, out char separator)
+            ? separator
+            : ':';
 
     private IEnumerable<IConnector> CreateConnectors(Assembly assembly, Type baseConnectorType)
     {

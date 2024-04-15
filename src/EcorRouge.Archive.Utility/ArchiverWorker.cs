@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using EcorRouge.Archive.Utility.CloudConnectors;
 using Ionic.Zip;
 using log4net;
 using EcorRouge.Archive.Utility.Extensions;
@@ -33,6 +34,8 @@ namespace EcorRouge.Archive.Utility
 
         private PluginBase _plugin;
         private Dictionary<string, object> _pluginProperties;
+
+        private ConnectorFacade _connectorFacade;
 
         private SavedState _savedState;
 
@@ -223,7 +226,7 @@ namespace EcorRouge.Archive.Utility
 
             try
             {
-                using var parser = InputFileParser.OpenFile(_inputFile);
+                using var parser = InputFileParser.OpenFile(_inputFile, _connectorFacade?.CloudPathSeparator);
 
                 _skippedListFile = new StreamWriter(Path.Combine(PathHelper.GetRootDataPath(), "skipped_files.txt"), !_savedState.IsEmpty);
 
@@ -232,7 +235,6 @@ namespace EcorRouge.Archive.Utility
                     await _plugin.OpenSessionAsync(_pluginProperties, cancellationToken);
                 }
 
-               
                 if(_plugin == null)
                 {
                     _filesInArchive = _savedState.TotalFilesToArchive;

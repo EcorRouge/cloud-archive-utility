@@ -10,10 +10,13 @@ public class ConnectorFacade
     private readonly IConnector _connector;
     private ICloudConnection _cloudConnection;
 
-    public ConnectorFacade(IConnector connector)
+    public ConnectorFacade(IConnector connector, char cloudPathSeparator)
     {
         _connector = connector;
+        CloudPathSeparator = cloudPathSeparator;
     }
+
+    public char CloudPathSeparator { get; }
 
     public string CredsType => _connector.IsCommon ? _connector.CommonType : _connector.Type;
 

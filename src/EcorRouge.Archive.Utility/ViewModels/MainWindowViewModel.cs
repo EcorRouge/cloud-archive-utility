@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using EcorRouge.Archive.Utility.CloudConnectors;
 using EcorRouge.Archive.Utility.Settings;
 using EcorRouge.Archive.Utility.Util;
 using log4net;
@@ -209,7 +210,8 @@ namespace EcorRouge.Archive.Utility.ViewModels
                         {
                             try
                             {
-                                _inputFile = InputFileParser.ScanFile(FileName);
+                                string[] connectorsPrefixes = CloudConnectorsManager.Instance.ConnectorsFacades.Select(c => c.Prefix).ToArray();
+                                _inputFile = InputFileParser.ScanFile(FileName, connectorsPrefixes);
 
                                 TotalFilesToArchive = _inputFile.TotalFiles;
                                 TotalFileSizeToArchive = _inputFile.TotalFilesSize;
