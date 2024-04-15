@@ -77,6 +77,14 @@ rmdir /s /q build\publish\plugins
 :: /s - Copy folders and subfolders, /i - If in doubt always assume the destination is a folder e.g. when the destination does not exist.
 xcopy /y /s /i build\plugins\* build\publish\plugins
 
+nuget sources list | findstr /c:"EcorRouge Feed"
+if errorlevel 1 (
+    echo Skipping cloud connectors build - no source.
+) else (
+    echo Building cloud connectors...
+    call build-cloud-connectors.cmd "Release"
+    xcopy /y /s /i build\connectors\* build\publish\connectors
+)
 
 pushd build\publish
   %ZIP_PATH% a -r "%DEPLOY_DIR%archive-utility-%NEW_VERSION%.zip" *.*

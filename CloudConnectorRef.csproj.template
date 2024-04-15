@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- This template csproj file is used during the build to load & publish cloud connectors nuget packages.
+       Note: the default values are pulled from the Directory.Build.props in the solution directory.
+  -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <OutputPath>..\..\connectors\$(MSBuildProjectName)</OutputPath>
+    <PublishDir>..\..\connectors\$(MSBuildProjectName)</PublishDir>
+  </PropertyGroup>
+
+</Project>
