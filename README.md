@@ -46,3 +46,11 @@ Submit-SigningRequest `
 ```
 
 6. Run `build-and-deploy.cmd`, it should sign binaries and installer automatically
+
+## Cloud connectors integration
+
+It is possible (optionally) to use cloud connectors from the private EcorRouge Nuget packages feed as data source. To do so:  
+- run `configure_feed.cmd`, provide username and password to access the Nuget packages feed  
+- run `build-and-deploy.cmd` - the connectors specified in the `cloud_connectors_package_ids.txt` will be downloaded and included into the installer, the application will be able to use them.  
+
+Currently only OneDrive connector is supported. Note that appropriate permissions are required to be able to access cloud resources. For example, OneDrive requires `User.Read.All` and `Files.Read.All` permissions to be set in Azure Portal, and `Files.ReadWrite.All` permission is additionally required to let the application to delete files. [More details on OneDrive connector configuration](https://github.com/EcorRouge/reveles-docker-collector/tree/main/connectors/Reveles.Cloud.Connector.OneDrive) 
