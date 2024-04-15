@@ -87,22 +87,12 @@ namespace EcorRouge.Archive.Utility
 
         public ArchiverState State { get; private set; }
 
-        public ArchiverWorker(PluginBase plugin, Dictionary<string, object> pluginProperties, SavedState savedState, InputFile inputFile)
+        public ArchiverWorker(PluginBase plugin, SavedState savedState, InputFile inputFile)
         {
             this._plugin = plugin;
             this._inputFile = inputFile;
-            this._pluginProperties = pluginProperties;
             _savedState = savedState;
-
-            if (_savedState.IsEmpty)
-            {
-                _savedState.SetPluginProperties(pluginProperties);
-                _pluginProperties = pluginProperties;
-            }
-            else
-            {
-                _pluginProperties = _savedState.GetPluginProperties();
-            }
+            _pluginProperties = _savedState.GetPluginProperties();
 
             if (_plugin != null)
             {

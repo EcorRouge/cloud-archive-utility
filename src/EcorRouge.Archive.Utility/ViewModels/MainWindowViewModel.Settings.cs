@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using EcorRouge.Archive.Utility.CloudConnectors;
+using EcorRouge.Archive.Utility.Plugins;
 using Microsoft.Toolkit.Mvvm.Input;
 using EcorRouge.Archive.Utility.Settings;
 
@@ -142,6 +145,14 @@ namespace EcorRouge.Archive.Utility.ViewModels
             return _properties.ToDictionary(x => x.Name, x => (object)x.Value?.Trim());
         }
 
+        private static Dictionary<string, object> GetProperties(PropertyModel[] propsModels)
+        {
+            if (propsModels == null)
+                return new Dictionary<string, object>();
+
+            return propsModels.ToDictionary(x => x.Name, x => (object)x.Value?.Trim());
+        }
+
         private bool CheckCanStart()
         {
             if (SelectedModeIndex == MODE_DELETE)
@@ -153,6 +164,14 @@ namespace EcorRouge.Archive.Utility.ViewModels
             var plugin = PluginsManager.Instance.Plugins[SelectedProviderIndex];
 
             return plugin.VerifyProperties(GetPropertyValues());
+        }
+
+        private static void AddPropertiesToSettings(string settingProvider, Dictionary<string, object> props)
+        {
+            foreach (var value in props)
+            {
+                SettingsFile.Instance.AddProviderProperty(settingProvider, value.Key, value.Value?.ToString());
+            }
         }
     }
 }

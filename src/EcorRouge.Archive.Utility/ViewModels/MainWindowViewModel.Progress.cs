@@ -149,7 +149,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
                 DisplayYesNoDialog(
                     "Delete warning",
-                    $"Your are going to remove {TotalFilesToArchive} files, {sizeStr} of data. This operation cannot be undone. Are you sure want to continue?",
+                    $"Your are going to remove {TotalFilesToArchive} files, {sizeStr} of data. This operation cannot be undone. Are you sure you want to continue?",
                     250,
                     () => { StartArchiving(true); },
                     () => { },
@@ -166,16 +166,15 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
             PluginBase plugin = null;
 
-            Dictionary<string, object> values = null;
             if (SelectedModeIndex == MODE_UPLOAD)
             {
                 plugin = PluginsManager.Instance.Plugins[SelectedProviderIndex];
+                var pluginProperties = GetProperties(_properties);
+                AddPropertiesToSettings(plugin.ProviderName, pluginProperties);
 
-                values = GetPropertyValues();
-
-                foreach (var value in values)
+                if (_savedState.IsEmpty)
                 {
-                    SettingsFile.Instance.AddProviderProperty(plugin.ProviderName, value.Key, value.Value?.ToString());
+                    _savedState.SetPluginProperties(pluginProperties);
                 }
 
                 SettingsFile.Instance.Save();
@@ -188,11 +187,11 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
                     DisplayYesNoDialog(
                         "Low space warning",
-                        $"There's no enough space on current drive to fit archives.\nSpace remaining: {sizeStr}. Archive size configured: {MaximumArchiveSizeMb} Mb. Are you sure want to continue?",
+                        $"There's not enough space on current drive to fit archives.\nSpace remaining: {sizeStr}. Archive size configured: {MaximumArchiveSizeMb} Mb. Are you sure want to continue?",
                         250,
                         () =>
                         {
-                            StartArchivingInternal(plugin, values);
+                            StartArchivingInternal(plugin);
                         },
                         () => { },
                         () => { }
@@ -202,10 +201,10 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 }
             }
 
-            StartArchivingInternal(plugin, values);
+            StartArchivingInternal(plugin);
         }
 
-        private void StartArchivingInternal(PluginBase plugin, Dictionary<string, object> values)
+        private void StartArchivingInternal(PluginBase plugin)
         {
             ArchivingLabel = "Initializing...";
             CanSelectSettings = false;
@@ -235,7 +234,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             _savedState.MaximumArchiveSizeMb = _maximumArchiveSizeMb;
             _savedState.Save();
 
-            _worker = new ArchiverWorker(plugin, values, _savedState, _inputFile);
+            _worker = new ArchiverWorker(plugin, _savedState, _inputFile);
             _worker.StateChanged += ArchiverWorker_StateChanged;
             _worker.Completed += ArchiveWorker_Completed;
             _worker.ArchivingProgress += ArchiveWorker_ArchivingProgress;
