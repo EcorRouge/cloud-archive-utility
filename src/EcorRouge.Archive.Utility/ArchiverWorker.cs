@@ -67,6 +67,7 @@ namespace EcorRouge.Archive.Utility
         public event EventHandler UploadingProgress;
         public event EventHandler DeletingProgress;
         public event EventHandler StateChanged;
+        public event Action<InputFileEntry> ArchivingNewFile;
 
         public bool IsCanceled { get; private set; }
         public bool IsBusy { get; private set; }
@@ -276,7 +277,7 @@ namespace EcorRouge.Archive.Utility
 
                 while ((entry = parser.GetNextEntry()) != null && !cancellationToken.IsCancellationRequested)
                 {
-                    if (_plugin != null && _zipFile == null)
+                    ArchivingNewFile?.Invoke(entry);
 
                     if (!deleteOnly && _zipFile == null)
                     {

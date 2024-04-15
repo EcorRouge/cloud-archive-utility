@@ -15,6 +15,7 @@ using EcorRouge.Archive.Utility.Converters;
 using EcorRouge.Archive.Utility.Extensions;
 using EcorRouge.Archive.Utility.Plugins;
 using EcorRouge.Archive.Utility.Settings;
+using EcorRouge.Archive.Utility.Util;
 
 namespace EcorRouge.Archive.Utility.ViewModels
 {
@@ -25,6 +26,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private string _uploadingLabel;
         private string _deletingLabel;
         private string _totalLabel;
+        private string _currentFileLabel;
 
         private bool _uploadingVisible;
         private bool _deletingVisible;
@@ -69,6 +71,11 @@ namespace EcorRouge.Archive.Utility.ViewModels
         {
             get => _totalLabel;
             set => SetProperty(ref _totalLabel, value);
+        }
+        public string CurrentFileLabel
+        {
+            get => _currentFileLabel;
+            set => SetProperty(ref _currentFileLabel, value);
         }
 
         public bool UploadingVisible
@@ -237,6 +244,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             UploadingLabel = "Initializing";
             DeletingLabel = "Initializing";
             TotalLabel = "Initializing";
+            CurrentFileLabel = string.Empty;
 
             _savedState.SelectedMode = _selectedModeIndex;
             _savedState.PluginType = plugin?.ProviderName;
@@ -255,6 +263,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             _worker.ArchivingProgress += ArchiveWorker_ArchivingProgress;
             _worker.DeletingProgress += ArchiveWorker_DeletingProgress;
             _worker.UploadingProgress += ArchiveWorker_UploadingProgress;
+            _worker.ArchivingNewFile += ArchiveWorker_ArchivingNewFile;
             _worker.Start();
         }
 
@@ -336,6 +345,11 @@ namespace EcorRouge.Archive.Utility.ViewModels
             FormatTotalLabel();
         }
 
+        private void ArchiveWorker_ArchivingNewFile(InputFileEntry fileToBeArchived)
+        {
+            CurrentFileLabel = $"{fileToBeArchived.FileName} ({FileSizeFormatter.Format(fileToBeArchived.FileSize)})";
+        }
+
         private void ArchiveWorker_Completed(object? sender, EventArgs e)
         {
             _worker.StateChanged -= ArchiverWorker_StateChanged;
@@ -343,6 +357,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             _worker.ArchivingProgress -= ArchiveWorker_ArchivingProgress;
             _worker.DeletingProgress -= ArchiveWorker_DeletingProgress;
             _worker.UploadingProgress -= ArchiveWorker_UploadingProgress;
+            _worker.ArchivingNewFile -= ArchiveWorker_ArchivingNewFile;
 
             if (_worker.State == ArchiverState.ErrorStarting)
                 return;
