@@ -36,4 +36,9 @@ public class ConnectorFacade
     {
         return _connector.DownloadResourceAsync(_cloudConnection.UndoActLike(), cloudPath, filePath, cancellationToken);
     }
+
+    public Task DeleteAsync(string cloudPath, CancellationToken cancellationToken)
+    {
+        return _connector.DeleteResourceAsync(_cloudConnection.UndoActLike(), cloudPath, cancellationToken);
+    }
 }

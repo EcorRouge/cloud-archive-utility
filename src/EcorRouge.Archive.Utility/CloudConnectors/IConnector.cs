@@ -14,4 +14,6 @@ public interface IConnector
     IConnectionFactory ConnectionFactory { get; }
 
     Task DownloadResourceAsync(dynamic cloudConnection, string cloudPath, string filePath, CancellationToken cancellationToken = default);
+
+    Task DeleteResourceAsync(dynamic cloudConnection, string cloudPath, CancellationToken cancellationToken = default);
 }

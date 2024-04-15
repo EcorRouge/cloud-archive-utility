@@ -324,12 +324,11 @@ namespace EcorRouge.Archive.Utility
                     //Thread.Sleep(1000); //TODO: for test
                 }
 
-                if (_plugin != null)
+                if (!deleteOnly)
                 {
                     await FlushArchive(cancellationToken);
+                    await UploadManifest(cancellationToken);
                 }
-
-                await UploadManifest(cancellationToken);
 
                 SavedState.Clear();
             }
@@ -643,7 +642,7 @@ namespace EcorRouge.Archive.Utility
             {
                 if (_connectorFacade != null)
                 {
-                    // TODO: to implement
+                    await _connectorFacade.DeleteAsync(resourcePath, cancellationToken);
                 }
                 else
                 {
