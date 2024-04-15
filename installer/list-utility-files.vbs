@@ -8,7 +8,7 @@ Set fso = CreateObject("Scripting.FileSystemObject")
 Set ObjOutFile = fso.CreateTextFile("utility-files.iss")
 
 'Call the GetFile function to get all files
-ListFolder "..\build\net5.0-windows\publish"
+ListFolder "..\build\publish"
  
 'Close the output file
 ObjOutFile.Close
@@ -16,10 +16,10 @@ ObjOutFile.Close
 WScript.Echo("Completed")
 
 Function ListFolder(FolderName)
-	GetFiles FolderName, ""
+    GetFiles FolderName, FolderName, ""
 End Function
  
-Function GetFiles(FolderName, RelFolder)
+Function GetFiles(RelativeRoot, FolderName, RelFolder)
     On Error Resume Next
      
     Dim ObjFolder
@@ -34,11 +34,11 @@ Function GetFiles(FolderName, RelFolder)
     'Write all files to output files
     For Each ObjFile In ObjFiles
         'Source: "..\wpf\ParagraphSnip\bin\Release\ParagraphSnip.exe.config"; DestDir: "{app}"; Flags: ignoreversion
-	If Len(RelFolder)>0 Then
-		ObjOutFile.WriteLine("Source: ""..\build\net5.0-windows\publish" & RelFolder & "\" & ObjFile.Name & """; DestDir: ""{app}" & RelFolder & """; Flags: ignoreversion")
-	Else
-		ObjOutFile.WriteLine("Source: ""..\build\net5.0-windows\publish" & RelFolder & "\" & ObjFile.Name & """; DestDir: ""{app}""; Flags: ignoreversion")
-	End If
+    If Len(RelFolder)>0 Then
+        ObjOutFile.WriteLine("Source: """ & RelativeRoot & RelFolder & "\" & ObjFile.Name & """; DestDir: ""{app}" & RelFolder & """; Flags: ignoreversion")
+    Else
+        ObjOutFile.WriteLine("Source: """ & RelativeRoot & RelFolder & "\" & ObjFile.Name & """; DestDir: ""{app}""; Flags: ignoreversion")
+    End If
     Next
 
  
@@ -47,6 +47,6 @@ Function GetFiles(FolderName, RelFolder)
      
     For Each ObjFolder In ObjSubFolders
         'Getting all Files from subfolder
-        GetFiles ObjFolder.Path, RelFolder & "\" & ObjFolder.Name
+        GetFiles RelativeRoot, ObjFolder.Path, RelFolder & "\" & ObjFolder.Name
     Next
 End Function

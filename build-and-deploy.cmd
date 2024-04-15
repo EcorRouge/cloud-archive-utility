@@ -17,6 +17,7 @@ echo Code signing mode = %SIGNING_MODE%
 set ZIP_PATH="C:\Program Files\7-Zip\7z.exe"
 set ISS_PATH="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 set OPENSSL_PATH="C:\OpenSSL-Win64\bin\openssl.exe"
+set DEPLOY_DIR=%~dp0\deploy\
 
 set /p SIGNTOOL_ARGS=<signtool_args
 echo Signtool arguments: %SIGNTOOL_ARGS%
@@ -58,42 +59,43 @@ if "%NEW_VERSION%" == "" (
 echo New version=%NEW_VERSION%.
 
 rmdir /s /q build
-rmdir /s /q deploy
-mkdir deploy
+rmdir /s /q "%DEPLOY_DIR%"
+mkdir "%DEPLOY_DIR%"
 
 powershell -Command "(Get-Content src\EcorRouge.Archive.Utility\EcorRouge.Archive.Utility.csproj -Raw) -replace '%OLD_VERSION%','%NEW_VERSION%' | Out-File -encoding UTF8 src\EcorRouge.Archive.Utility\EcorRouge.Archive.Utility.csproj"
 
 dotnet publish -c Release src\EcorRouge.Archive.Utility.sln
+xcopy /y /i build\* build\publish
 
 IF %SIGNING_MODE%==sign (
-  move /y build\net5.0-windows\publish\EcorRouge.Archive.Utility.exe build\net5.0-windows\publish\EcorRouge.Archive.Utility-unsigned.exe
-  powershell -file signpath.ps1 build\net5.0-windows\publish\EcorRouge.Archive.Utility-unsigned.exe build\net5.0-windows\publish\EcorRouge.Archive.Utility.exe
-  del /s build\net5.0-windows\publish\EcorRouge.Archive.Utility-unsigned.exe
+  move /y build\publish\EcorRouge.Archive.Utility.exe build\publish\EcorRouge.Archive.Utility-unsigned.exe
+  powershell -file signpath.ps1 build\publish\EcorRouge.Archive.Utility-unsigned.exe build\publish\EcorRouge.Archive.Utility.exe
+  del /s build\publish\EcorRouge.Archive.Utility-unsigned.exe
 )
 
-rmdir /s /q build\net5.0-windows\publish\plugins
-mkdir build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.S3
-mkdir build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.Local
-mkdir build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.Wasabi
+rmdir /s /q build\publish\plugins
+:: /s - Copy folders and subfolders, /i - If in doubt always assume the destination is a folder e.g. when the destination does not exist.
+xcopy /y /s /i build\plugins\* build\publish\plugins
 
-xcopy /y build\plugins\EcorRouge.Archive.Utility.Plugins.S3\net5.0\publish\* build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.S3\
-xcopy /y build\plugins\EcorRouge.Archive.Utility.Plugins.Local\net5.0\publish\* build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.Local\
-xcopy /y build\plugins\EcorRouge.Archive.Utility.Plugins.Wasabi\net5.0\publish\* build\net5.0-windows\publish\plugins\EcorRouge.Archive.Utility.Plugins.Wasabi\
 
-pushd build\net5.0-windows\publish
-%ZIP_PATH% a -r ..\..\..\deploy\archive-utility-%NEW_VERSION%.zip *.*
+pushd build\publish
+  %ZIP_PATH% a -r "%DEPLOY_DIR%archive-utility-%NEW_VERSION%.zip" *.*
 popd
 
-%OPENSSL_PATH% dgst -md5 -binary deploy/archive-utility-%NEW_VERSION%.zip | %OPENSSL_PATH% enc -base64 > deploy/archive-utility-%NEW_VERSION%.md5
+%OPENSSL_PATH% dgst -md5 -binary "%DEPLOY_DIR%archive-utility-%NEW_VERSION%.zip" | %OPENSSL_PATH% enc -base64 > "%DEPLOY_DIR%archive-utility-%NEW_VERSION%.md5"
 
-%ISS_PATH% installer\utility-1.0-installer.iss
+pushd installer
+  cscript.exe list-utility-files.vbs
+  %ISS_PATH% utility-1.0-installer.iss
 
-copy /y installer\Output\setup-archive-utility-%NEW_VERSION%-x86.exe deploy\
+  copy /y Output\setup-archive-utility-%NEW_VERSION%-x86.exe "%DEPLOY_DIR%"
+popd
 
+REM simplify via pushd %DEPLOY_DIR%
 IF %SIGNING_MODE%==sign (
-  move /y deploy\setup-archive-utility-%NEW_VERSION%-x86.exe deploy\setup-archive-utility-%NEW_VERSION%-x86-unsigned.exe
-  powershell -file signpath.ps1 deploy\setup-archive-utility-%NEW_VERSION%-x86-unsigned.exe deploy\setup-archive-utility-%NEW_VERSION%-x86.exe
-  del /s deploy\setup-archive-utility-%NEW_VERSION%-x86-unsigned.exe
+  move /y "%DEPLOY_DIR%setup-archive-utility-%NEW_VERSION%-x86.exe" "%DEPLOY_DIR%setup-archive-utility-%NEW_VERSION%-x86-unsigned.exe"
+  powershell -file signpath.ps1 "%DEPLOY_DIR%setup-archive-utility-%NEW_VERSION%-x86-unsigned.exe" "%DEPLOY_DIR%setup-archive-utility-%NEW_VERSION%-x86.exe"
+  del /s "%DEPLOY_DIR%setup-archive-utility-%NEW_VERSION%-x86-unsigned.exe"
 )
 
 @endlocal

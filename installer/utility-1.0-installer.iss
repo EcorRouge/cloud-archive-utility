@@ -3,7 +3,7 @@
 
 #define MyAppName "EcorRouge Archive Utility"
 
-#define FileVerStr GetFileVersion("..\build\net5.0-windows\publish\EcorRouge.Archive.Utility.exe")
+#define FileVerStr GetFileVersion("..\build\publish\EcorRouge.Archive.Utility.exe")
 #define StripBuild(str VerStr) Copy(VerStr, 2, RPos(".", VerStr)-1)
 #define MyAppVersion FileVerStr
 ;StripBuild(FileVerStr)
