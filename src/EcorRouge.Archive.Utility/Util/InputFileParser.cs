@@ -277,6 +277,7 @@ namespace EcorRouge.Archive.Utility.Util
                     FileName = parts[2],
                     FileSize = length,
                     Path = parts[3],
+                    RawEntryContent = line
                 };
             }
             else
@@ -340,6 +341,7 @@ namespace EcorRouge.Archive.Utility.Util
                 FileName = DecodeB64IfNeeded(displayFilePath ?? cloudPath),
                 FileSize = fileSize,
                 CreatedAtUtc = createdAtUtc ?? modifiedAtUtc,
+                RawEntryContent = line
             };
 
             string DecodeB64IfNeeded(string target)

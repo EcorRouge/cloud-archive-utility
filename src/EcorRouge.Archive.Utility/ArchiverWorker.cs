@@ -301,7 +301,7 @@ namespace EcorRouge.Archive.Utility
                     }
                     catch (Exception ex)
                     {
-                        _skippedListFile.WriteLine(entry.Path);
+                        _skippedListFile.WriteLine(entry.RawEntryContent);
                         log.Error($"Error processing file: {entry.Path}", ex);
                     }
 
