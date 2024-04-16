@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using EcorRouge.Archive.Utility.CloudConnectors;
 using Ionic.Zip;
 using log4net.Core;
 using Microsoft.Toolkit.Mvvm.Input;
@@ -14,6 +15,7 @@ using EcorRouge.Archive.Utility.Converters;
 using EcorRouge.Archive.Utility.Extensions;
 using EcorRouge.Archive.Utility.Plugins;
 using EcorRouge.Archive.Utility.Settings;
+using EcorRouge.Archive.Utility.Util;
 
 namespace EcorRouge.Archive.Utility.ViewModels
 {
@@ -24,6 +26,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private string _uploadingLabel;
         private string _deletingLabel;
         private string _totalLabel;
+        private string _currentFileLabel;
 
         private bool _uploadingVisible;
         private bool _deletingVisible;
@@ -68,6 +71,11 @@ namespace EcorRouge.Archive.Utility.ViewModels
         {
             get => _totalLabel;
             set => SetProperty(ref _totalLabel, value);
+        }
+        public string CurrentFileLabel
+        {
+            get => _currentFileLabel;
+            set => SetProperty(ref _currentFileLabel, value);
         }
 
         public bool UploadingVisible
@@ -149,7 +157,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
                 DisplayYesNoDialog(
                     "Delete warning",
-                    $"Your are going to remove {TotalFilesToArchive} files, {sizeStr} of data. This operation cannot be undone. Are you sure want to continue?",
+                    $"Your are going to remove {TotalFilesToArchive} files, {sizeStr} of data. This operation cannot be undone. Are you sure you want to continue?",
                     250,
                     () => { StartArchiving(true); },
                     () => { },
@@ -165,17 +173,29 @@ namespace EcorRouge.Archive.Utility.ViewModels
             CanCancelProcess = true;
 
             PluginBase plugin = null;
+            ConnectorFacade sourceConnector = CloudConnectorsManager.Instance.GetConnectorFacade(SelectedConnectorType);
+            if (sourceConnector != null)
+            {
+                var connectorProperties = GetProperties(_connectorProperties);
+                AddPropertiesToSettings(sourceConnector.CredsType, connectorProperties);
 
-            Dictionary<string, object> values = null;
+                if (_savedState.IsEmpty)
+                {
+                    _savedState.SetConnectorProperties(connectorProperties);
+                }
+
+                SettingsFile.Instance.Save();
+            }
+
             if (SelectedModeIndex == MODE_UPLOAD)
             {
                 plugin = PluginsManager.Instance.Plugins[SelectedProviderIndex];
+                var pluginProperties = GetProperties(_pluginProperties);
+                AddPropertiesToSettings(plugin.ProviderName, pluginProperties);
 
-                values = GetPropertyValues();
-
-                foreach (var value in values)
+                if (_savedState.IsEmpty)
                 {
-                    SettingsFile.Instance.AddProviderProperty(plugin.ProviderName, value.Key, value.Value?.ToString());
+                    _savedState.SetPluginProperties(pluginProperties);
                 }
 
                 SettingsFile.Instance.Save();
@@ -188,11 +208,11 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
                     DisplayYesNoDialog(
                         "Low space warning",
-                        $"There's no enough space on current drive to fit archives.\nSpace remaining: {sizeStr}. Archive size configured: {MaximumArchiveSizeMb} Mb. Are you sure want to continue?",
+                        $"There's not enough space on current drive to fit archives.\nSpace remaining: {sizeStr}. Archive size configured: {MaximumArchiveSizeMb} Mb. Are you sure want to continue?",
                         250,
                         () =>
                         {
-                            StartArchivingInternal(plugin, values);
+                            StartArchivingInternal(plugin, sourceConnector);
                         },
                         () => { },
                         () => { }
@@ -202,10 +222,10 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 }
             }
 
-            StartArchivingInternal(plugin, values);
+            StartArchivingInternal(plugin, sourceConnector);
         }
 
-        private void StartArchivingInternal(PluginBase plugin, Dictionary<string, object> values)
+        private void StartArchivingInternal(PluginBase plugin, ConnectorFacade sourceConnector)
         {
             ArchivingLabel = "Initializing...";
             CanSelectSettings = false;
@@ -224,9 +244,11 @@ namespace EcorRouge.Archive.Utility.ViewModels
             UploadingLabel = "Initializing";
             DeletingLabel = "Initializing";
             TotalLabel = "Initializing";
+            CurrentFileLabel = string.Empty;
 
             _savedState.SelectedMode = _selectedModeIndex;
             _savedState.PluginType = plugin?.ProviderName;
+            _savedState.ConnectorType = sourceConnector?.ConnectorType;
             _savedState.DeleteFiles = DeleteFilesAfterUpload;
             _savedState.InputFileName = _fileName;
             _savedState.TotalFilesToArchive = _totalFilesToArchive;
@@ -235,12 +257,13 @@ namespace EcorRouge.Archive.Utility.ViewModels
             _savedState.MaximumArchiveSizeMb = _maximumArchiveSizeMb;
             _savedState.Save();
 
-            _worker = new ArchiverWorker(plugin, values, _savedState, _inputFile);
+            _worker = new ArchiverWorker(plugin, sourceConnector, _savedState, _inputFile);
             _worker.StateChanged += ArchiverWorker_StateChanged;
             _worker.Completed += ArchiveWorker_Completed;
             _worker.ArchivingProgress += ArchiveWorker_ArchivingProgress;
             _worker.DeletingProgress += ArchiveWorker_DeletingProgress;
             _worker.UploadingProgress += ArchiveWorker_UploadingProgress;
+            _worker.ArchivingNewFile += ArchiveWorker_ArchivingNewFile;
             _worker.Start();
         }
 
@@ -322,6 +345,11 @@ namespace EcorRouge.Archive.Utility.ViewModels
             FormatTotalLabel();
         }
 
+        private void ArchiveWorker_ArchivingNewFile(InputFileEntry fileToBeArchived)
+        {
+            CurrentFileLabel = $"{fileToBeArchived.FileName} ({FileSizeFormatter.Format(fileToBeArchived.FileSize)})";
+        }
+
         private void ArchiveWorker_Completed(object? sender, EventArgs e)
         {
             _worker.StateChanged -= ArchiverWorker_StateChanged;
@@ -329,6 +357,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             _worker.ArchivingProgress -= ArchiveWorker_ArchivingProgress;
             _worker.DeletingProgress -= ArchiveWorker_DeletingProgress;
             _worker.UploadingProgress -= ArchiveWorker_UploadingProgress;
+            _worker.ArchivingNewFile -= ArchiveWorker_ArchivingNewFile;
 
             if (_worker.State == ArchiverState.ErrorStarting)
                 return;

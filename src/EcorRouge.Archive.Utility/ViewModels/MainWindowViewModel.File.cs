@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using EcorRouge.Archive.Utility.CloudConnectors;
 using EcorRouge.Archive.Utility.Util;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -52,7 +53,13 @@ namespace EcorRouge.Archive.Utility.ViewModels
                     TotalFilesToArchive = 0;
                     TotalFileSizeToArchive = 0;
 
-                    _inputFile = InputFileParser.ScanFile(FileName);
+                    string[] connectorsPrefixes = CloudConnectorsManager.Instance.ConnectorsFacades.Select(c => c.Prefix).ToArray();
+                    _inputFile = InputFileParser.ScanFile(FileName, connectorsPrefixes);
+
+                    if (_inputFile.ConnectorPrefix != null)
+                    {
+                        SelectConnector(_inputFile.ConnectorPrefix);
+                    }
 
                     TotalFilesToArchive = _inputFile.TotalFiles;
                     TotalFileSizeToArchive = _inputFile.TotalFilesSize;

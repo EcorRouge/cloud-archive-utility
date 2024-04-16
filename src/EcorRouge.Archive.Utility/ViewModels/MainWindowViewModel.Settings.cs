@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using EcorRouge.Archive.Utility.CloudConnectors;
+using EcorRouge.Archive.Utility.Plugins;
 using Microsoft.Toolkit.Mvvm.Input;
 using EcorRouge.Archive.Utility.Settings;
 
@@ -12,15 +15,18 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private const int MODE_UPLOAD = 0;
         private const int MODE_DELETE = 1;
 
-        private PropertyModel[] _properties = null;
+        private PropertyModel[] _pluginProperties = null;
+        private PropertyModel[] _connectorProperties = null;
         private int _selectedModeIndex = MODE_UPLOAD;
         private bool _canStart;
+        private string _selectedConnectorType;
         private int _selectedProviderIndex;
         private bool _deleteFilesAfterUpload;
         private int _maximumFiles;
         private int _maximumArchiveSizeMb;
 
         public ObservableCollection<string> CloudProviders { get; } = new ObservableCollection<string>();
+        public ObservableCollection<string> SourceCloudConnectors { get; } = new ObservableCollection<string>();
 
         public RelayCommand StartCommand { get; set; }
 
@@ -42,7 +48,9 @@ namespace EcorRouge.Archive.Utility.ViewModels
         }
 
 //        [AlsoNotifyFor("SelectedProviderIndex")]
-        public PropertyModel[] Properties => _properties;
+        public PropertyModel[] PluginProperties => _pluginProperties;
+
+        public PropertyModel[] ConnectorProperties => _connectorProperties;
 
         public int SelectedProviderIndex
         {
@@ -52,6 +60,17 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 SetProperty(ref _selectedProviderIndex, value);
 
                 FillProviderProperties();
+            }
+        }
+
+        public string SelectedConnectorType
+        {
+            get => _selectedConnectorType;
+            set
+            {
+                SetProperty(ref _selectedConnectorType, value);
+
+                FillConnectorProperties();
             }
         }
 
@@ -78,6 +97,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             StartCommand = new RelayCommand(StartArchiving);
 
             SelectedProviderIndex = SettingsFile.Instance.ProviderIndex;
+            SelectedConnectorType = SettingsFile.Instance.ConnectorType;
             DeleteFilesAfterUpload = SettingsFile.Instance.DeleteFilesAfterUpload;
             MaximumFiles = SettingsFile.Instance.MaximumFiles;
             MaximumArchiveSizeMb = SettingsFile.Instance.MaximumArchiveSizeMb;
@@ -85,61 +105,86 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
         private void FillProviderProperties()
         {
-            UnsubscribeProperties();
+            UnsubscribeProperties(_pluginProperties, ProviderProperty_PropertyChanged);
 
-            if (SelectedProviderIndex < 0 || SelectedProviderIndex >= PluginsManager.Instance.Plugins.Count)
-            {
-                _properties = new PropertyModel[] { };
-            }
-            else
-            {
-                var plugin = PluginsManager.Instance.Plugins[SelectedProviderIndex];
+            PluginBase plugin = PluginsManager.Instance.GetPlugin(SelectedProviderIndex);
 
-                _properties = plugin.Properties.Select(x => new PropertyModel(x, SettingsFile.Instance.GetProviderProperty(plugin.ProviderName, x.Name))).ToArray();
-            }
+            _pluginProperties = plugin != null ? GetPropModels(plugin.ProviderName, plugin.Properties).ToArray() : Array.Empty<PropertyModel>();
 
-            SubscribeProperties();
+            SubscribeProperties(_pluginProperties, ProviderProperty_PropertyChanged);
 
-            OnPropertyChanged(nameof(Properties));
+            OnPropertyChanged(nameof(PluginProperties));
 
             CanStart = CheckCanStart();
         }
 
-        private void UnsubscribeProperties()
+        private void FillConnectorProperties()
         {
-            if (_properties == null)
+            UnsubscribeProperties(_connectorProperties, ConnectorProperty_PropertyChanged);
+
+            ConnectorFacade connectorFacade = CloudConnectorsManager.Instance.GetConnectorFacade(SelectedConnectorType);
+
+            if (connectorFacade != null)
+            {
+                var connProps = CloudConnectorsManager.Instance.GetCredentialsNames(connectorFacade);
+                _connectorProperties = GetPropModels(connectorFacade.CredsType, connProps).ToArray();
+            }
+            else
+            {
+                _connectorProperties = Array.Empty<PropertyModel>();;
+            }
+
+            SubscribeProperties(_connectorProperties, ConnectorProperty_PropertyChanged);
+
+            OnPropertyChanged(nameof(ConnectorProperties));
+
+            CanStart = CheckCanStart();
+        }
+
+        IEnumerable<PropertyModel> GetPropModels(string settingProviderName, CloudProviderProperty[] props)
+            => props.Select(prop => new PropertyModel(prop, SettingsFile.Instance.GetProviderProperty(settingProviderName, prop.Name)));
+
+
+        private void UnsubscribeProperties(PropertyModel[] propModels, PropertyChangedEventHandler handler)
+        {
+            if (propModels == null)
                 return;
 
-            foreach (var propertyModel in _properties)
+            foreach (var propertyModel in propModels)
             {
-                propertyModel.PropertyChanged -= ProviderProperty_PropertyChanged;
+                propertyModel.PropertyChanged -= handler;
             }
         }
 
-        private void SubscribeProperties()
+        private void SubscribeProperties(PropertyModel[] propModels, PropertyChangedEventHandler handler)
         {
-            if (_properties == null)
+            if (propModels == null)
                 return;
 
-            foreach (var propertyModel in _properties)
+            foreach (var propertyModel in propModels)
             {
-                propertyModel.PropertyChanged += ProviderProperty_PropertyChanged;
+                propertyModel.PropertyChanged += handler;
             }
         }
 
         private void ProviderProperty_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            OnPropertyChanged(nameof(Properties));
+            OnPropertyChanged(nameof(PluginProperties));
 
             CanStart = CheckCanStart();
         }
 
-        private Dictionary<string, object> GetPropertyValues()
+        private void ConnectorProperty_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (_properties == null)
+            OnPropertyChanged(nameof(ConnectorProperties));
+        }
+
+        private static Dictionary<string, object> GetProperties(PropertyModel[] propsModels)
+        {
+            if (propsModels == null)
                 return new Dictionary<string, object>();
 
-            return _properties.ToDictionary(x => x.Name, x => (object)x.Value?.Trim());
+            return propsModels.ToDictionary(x => x.Name, x => (object)x.Value?.Trim());
         }
 
         private bool CheckCanStart()
@@ -147,12 +192,28 @@ namespace EcorRouge.Archive.Utility.ViewModels
             if (SelectedModeIndex == MODE_DELETE)
                 return true;
 
-            if (SelectedProviderIndex < 0 || SelectedProviderIndex >= PluginsManager.Instance.Plugins.Count)
-                return false;
+            var plugin = PluginsManager.Instance.GetPlugin(SelectedProviderIndex);
+            if (plugin == null) return false;
 
-            var plugin = PluginsManager.Instance.Plugins[SelectedProviderIndex];
+            bool pluginPropsOk = plugin.VerifyProperties(GetProperties(_pluginProperties));
 
-            return plugin.VerifyProperties(GetPropertyValues());
+            if (SelectedConnectorType != null && SelectedConnectorType != SettingsFile.DefaultConnectorType)
+            {
+                bool connectorProsOk = _connectorProperties.All(p => !string.IsNullOrWhiteSpace(p.Value));
+                return connectorProsOk && pluginPropsOk;
+            }
+            else
+            {
+                return pluginPropsOk;
+            }
+        }
+
+        private static void AddPropertiesToSettings(string settingProvider, Dictionary<string, object> props)
+        {
+            foreach (var value in props)
+            {
+                SettingsFile.Instance.AddProviderProperty(settingProvider, value.Key, value.Value?.ToString());
+            }
         }
     }
 }

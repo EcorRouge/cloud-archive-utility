@@ -1,17 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\..\..\build\plugins\EcorRouge.Archive.Utility.Plugins.S3</OutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>..\..\..\build\plugins\EcorRouge.Archive.Utility.Plugins.S3</OutputPath>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="3.7.7.5">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>

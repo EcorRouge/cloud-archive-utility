@@ -2,17 +2,11 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net7.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
-    <Version>1.2.6.1</Version>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Version>2.0.0.0</Version>
     <OutputPath>..\..\build</OutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>..\..\build</OutputPath>
+    <PublishDir>..\..\build</PublishDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="DotNetZip" Version="1.15.0" />
+    <PackageReference Include="ImpromptuInterface" Version="8.0.4" />
     <PackageReference Include="log4net" Version="2.0.13" />
     <PackageReference Include="McMaster.NETCore.Plugins" Version="1.4.0" />
     <PackageReference Include="Microsoft.Toolkit.Mvvm" Version="7.1.1" />

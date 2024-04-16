@@ -1,17 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\..\..\build\plugins\EcorRouge.Archive.Utility.Plugins.Local</OutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>..\..\..\build\plugins\EcorRouge.Archive.Utility.Plugins.Local</OutputPath>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\EcorRouge.Archive.Utility.Plugins\EcorRouge.Archive.Utility.Plugins.csproj" />
   </ItemGroup>

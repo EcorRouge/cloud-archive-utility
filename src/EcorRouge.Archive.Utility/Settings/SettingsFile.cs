@@ -11,6 +11,8 @@ namespace EcorRouge.Archive.Utility.Settings
 {
     public class SettingsFile
     {
+        public const string DefaultConnectorType = "Local Disk";
+
         internal static readonly ILog log = LogManager.GetLogger(typeof(SettingsFile));
 
         private static SettingsFile _instance = null;
@@ -38,6 +40,8 @@ namespace EcorRouge.Archive.Utility.Settings
         public Dictionary<string, string> PreviousCredentials { get; set; }
 
         public int ProviderIndex { get; set; }
+
+        public string ConnectorType { get; set; } = DefaultConnectorType;
 
         public bool DeleteFilesAfterUpload { get; set; }
 
@@ -87,6 +91,7 @@ namespace EcorRouge.Archive.Utility.Settings
             return new SettingsFile()
             {
                 ProviderIndex = 0,
+                ConnectorType = DefaultConnectorType,
                 DeleteFilesAfterUpload = true,
                 MaximumFiles = 1000,
                 MaximumArchiveSizeMb = 2048,

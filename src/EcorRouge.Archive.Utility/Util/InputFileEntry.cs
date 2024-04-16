@@ -11,5 +11,9 @@ namespace EcorRouge.Archive.Utility.Util
         public string FileName { get; set; }
         public string Path { get; set; }
         public long FileSize { get; set; }
+
+        public DateTime? CreatedAtUtc { get; set; }
+
+        public string RawEntryContent { get; set; }
     }
 }
