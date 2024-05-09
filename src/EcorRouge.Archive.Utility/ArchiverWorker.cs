@@ -45,6 +45,7 @@ namespace EcorRouge.Archive.Utility
         private long _filesSizeInArchive = 0;
         private long _filesProcessed = 0;
         private long _bytesProcessed = 0;
+        private long _filesFailed = 0;
 
         private long _totalArchiveSize = 0;
         private long _zipFileSize = 0;
@@ -73,6 +74,7 @@ namespace EcorRouge.Archive.Utility
         public bool IsBusy { get; private set; }
 
         public long FilesInArchive => _filesInArchive;
+        public long FilesFailed => _filesFailed;
         public long FilesSizeInArchive => _filesSizeInArchive;
         public long TotalArchiveSize => _totalArchiveSize;
         public long ArchiveSize => _zipFileSize;
@@ -140,6 +142,7 @@ namespace EcorRouge.Archive.Utility
         public void Start()
         {
             _filesInArchive = 0;
+            _filesFailed = 0;
             _filesSizeInArchive = 0;
             _totalArchiveSize = 0;
             ArchiveFileProgress = 0;
@@ -298,15 +301,17 @@ namespace EcorRouge.Archive.Utility
                         {
                             await ProcessResourceAsync(entry, cancellationToken);
                         }
+
+                        _filesInArchive++;
                     }
                     catch (Exception ex)
                     {
                         _skippedListFile.WriteLine(entry.RawEntryContent);
+                        _filesFailed++;
                         log.Error($"Error processing file: {entry.Path}", ex);
                     }
 
                     _filesProcessed++;
-                    _filesInArchive++;
 
                     ArchivingProgress?.Invoke(this, EventArgs.Empty);
 

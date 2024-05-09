@@ -4,7 +4,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net7.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
-    <Version>2.0.0.0</Version>
+    <Version>2.1.0.0</Version>
     <OutputPath>..\..\build</OutputPath>
     <PublishDir>..\..\build</PublishDir>
   </PropertyGroup>
@@ -16,12 +16,12 @@
 
   <ItemGroup>
     <PackageReference Include="DotNetZip" Version="1.15.0" />
-    <PackageReference Include="ImpromptuInterface" Version="8.0.4" />
     <PackageReference Include="log4net" Version="2.0.13" />
     <PackageReference Include="McMaster.NETCore.Plugins" Version="1.4.0" />
     <PackageReference Include="Microsoft.Toolkit.Mvvm" Version="7.1.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
+    <PackageReference Include="Reveles.Collector.Cloud.Connector" Version="[1.2.18, 2.0.0)" />
   </ItemGroup>
 
   <ItemGroup>

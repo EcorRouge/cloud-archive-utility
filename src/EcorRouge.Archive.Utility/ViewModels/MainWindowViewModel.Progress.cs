@@ -366,7 +366,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             CanSelectProgress = false;
             CanSelectFinish = true;
 
-            TotalCompletedFilesLabel = $"Total files processed: {_worker.FilesProcessed}";
+            TotalCompletedFilesLabel = $"Total files processed: {_worker.FilesProcessed}, errors: {_worker.FilesFailed}";
             TotalCompletedBytesLabel = $"Total bytes processed: {FileSizeFormatter.Format(_worker.BytesProcessed)} (archived: {FileSizeFormatter.Format(_worker.TotalArchiveSize + _worker.ArchiveSize)} )";
 
             if (_worker.IsCanceled)
@@ -383,7 +383,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
         {
             TotalProgress = _worker.FilesProcessed * 100.0 / _totalFilesToArchive;
 
-            TotalLabel = $"Total progress: {TotalProgress:N1}%, {FileSizeFormatter.Format(_worker.BytesProcessed)}";
+            TotalLabel = $"Total progress: {TotalProgress:N1}%, {FileSizeFormatter.Format(_worker.BytesProcessed)}, {_worker.FilesFailed} errors.";
         }
     }
 }
