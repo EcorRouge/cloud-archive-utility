@@ -6,9 +6,9 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using EcorRouge.Archive.Utility.Plugins;
-using ImpromptuInterface;
 using log4net;
 using McMaster.NETCore.Plugins;
+using Reveles.Collector.Cloud.Connector;
 
 namespace EcorRouge.Archive.Utility.CloudConnectors;
 
@@ -80,57 +80,59 @@ public class CloudConnectorsManager
         if (!Directory.Exists(connectorsDir))
             return;
 
-        const string connBaseDirName = "Reveles.Collector.Cloud.Connector.Ref";
-        var connBaseDllPath = Path.Combine(connectorsDir, connBaseDirName, "Reveles.Collector.Cloud.Connector.dll");
-        if (!File.Exists(connBaseDllPath))
-            return;
-
         foreach (var dir in Directory.GetDirectories(connectorsDir))
         {
             var dirName = Path.GetFileName(dir);
-            if (dirName.Equals(connBaseDirName, StringComparison.OrdinalIgnoreCase)) continue;
 
-            var pluginDll = Path.Combine(dir, dirName + ".dll");
-            if (File.Exists(pluginDll))
+            var connectorDll = Path.Combine(dir, dirName + ".dll");
+            if (File.Exists(connectorDll))
             {
-                //var loader = PluginLoader.CreateFromAssemblyFile(pluginDll, sharedTypes: new[] {connBaseType});
+                Type connBaseType = typeof(ConnectorBase);
 
-                var loader = PluginLoader.CreateFromAssemblyFile(pluginDll);
-                var connBaseAsm = loader.LoadAssemblyFromPath(connBaseDllPath);
+                var loader = PluginLoader.CreateFromAssemblyFile(
+                    connectorDll,
+                    sharedTypes: new[] { connBaseType });
+
                 var connAsm = loader.LoadDefaultAssembly();
 
-                Type connBaseType = connBaseAsm.GetType("Reveles.Collector.Cloud.Connector.ConnectorBase");
                 foreach (var connector in CreateConnectors(connAsm, connBaseType))
                 {
                     if (connector.Type.EndsWith("-old", StringComparison.InvariantCultureIgnoreCase)) continue;
 
                     char cloudPathSeparator = GetCloudPathSeparator(connector);
-                    _connectors.Add(new ConnectorFacade(connector, cloudPathSeparator));
+                    try
+                    {
+                        _connectors.Add(new ConnectorFacade(connector, cloudPathSeparator));
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"Failed to load connector {connector.GetType().Name}. {ex}");
+                    }
                 }
             }
         }
     }
 
-    private char GetCloudPathSeparator(IConnector connector)
+    private char GetCloudPathSeparator(ConnectorBase connector)
         => _pathSeparatorsByConnectorType.TryGetValue(connector.CommonType, out char separator)
             ? separator
             : ':';
 
-    private IEnumerable<IConnector> CreateConnectors(Assembly assembly, Type baseConnectorType)
+    private IEnumerable<ConnectorBase> CreateConnectors(Assembly assembly, Type baseConnectorType)
     {
         var connectorTypes = assembly.GetTypes()
             .Where(t => baseConnectorType.IsAssignableFrom(t) && !t.IsAbstract);
 
         foreach (var connType in connectorTypes)
         {
-            yield return Activator.CreateInstance(connType).ActLike<IConnector>();
+            yield return (ConnectorBase)Activator.CreateInstance(connType);
         }
 
         if (!assembly.GetName().Name?.EndsWith(".Ref") ?? true) yield break;
 
         foreach (var forwardedTypeName in GetForwardedTypes(assembly))
         {
-            yield return assembly.CreateInstance(forwardedTypeName).ActLike<IConnector>();
+            yield return (ConnectorBase)assembly.CreateInstance(forwardedTypeName);
         }
     }
 
