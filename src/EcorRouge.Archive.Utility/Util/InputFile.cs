@@ -14,6 +14,6 @@ namespace EcorRouge.Archive.Utility.Util
         public bool IsZip { get; set; }
         public int Columns { get; set; }
 
-        public string ConnectorPrefix { get; set; }
+        public string ConnectorMarker { get; set; }
     }
 }

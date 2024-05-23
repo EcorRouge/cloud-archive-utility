@@ -170,13 +170,13 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private void ProviderProperty_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             OnPropertyChanged(nameof(PluginProperties));
-
             CanStart = CheckCanStart();
         }
 
         private void ConnectorProperty_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             OnPropertyChanged(nameof(ConnectorProperties));
+            CanStart = CheckCanStart();
         }
 
         private static Dictionary<string, object> GetProperties(PropertyModel[] propsModels)
