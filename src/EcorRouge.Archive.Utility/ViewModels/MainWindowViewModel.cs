@@ -213,7 +213,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
                         {
                             try
                             {
-                                string[] connectorsPrefixes = CloudConnectorsManager.Instance.ConnectorsFacades.Select(c => c.Prefix).ToArray();
+                                string[] connectorsPrefixes = CloudConnectorsManager.Instance.ConnectorsFacades.SelectMany(c => c.Prefixes).ToArray();
                                 _inputFile = InputFileParser.ScanFile(FileName, connectorsPrefixes);
 
                                 if (_inputFile.ConnectorPrefix != null)
@@ -256,7 +256,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private void SelectConnector(string connectorPrefix)
         {
             string connectorType = CloudConnectorsManager.Instance.ConnectorsFacades.First(c =>
-                string.Equals(connectorPrefix, c.Prefix, StringComparison.OrdinalIgnoreCase)).ConnectorType;
+                 c.Prefixes.Contains(connectorPrefix, StringComparer.OrdinalIgnoreCase)).ConnectorType;
 
             SelectedConnectorType = connectorType;
         }

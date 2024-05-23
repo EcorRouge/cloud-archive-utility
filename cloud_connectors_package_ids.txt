@@ -1,1 +1,2 @@
 Reveles.Cloud.Connector.OneDrive *
+Reveles.Cloud.Connector.SharePoint *

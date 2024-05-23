@@ -53,7 +53,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
                     TotalFilesToArchive = 0;
                     TotalFileSizeToArchive = 0;
 
-                    string[] connectorsPrefixes = CloudConnectorsManager.Instance.ConnectorsFacades.Select(c => c.Prefix).ToArray();
+                    string[] connectorsPrefixes = CloudConnectorsManager.Instance.ConnectorsFacades.SelectMany(c => c.Prefixes).ToArray();
                     _inputFile = InputFileParser.ScanFile(FileName, connectorsPrefixes);
 
                     if (_inputFile.ConnectorPrefix != null)
@@ -67,7 +67,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 {
                     _fileLoading = false;
                     CanBrowseFile = true;
-                    CanSelectSettings = TotalFilesToArchive > 0 && TotalFileSizeToArchive > 0;
+                    CanSelectSettings = TotalFilesToArchive > 0;
 
                     if (t.Exception != null)
                     {

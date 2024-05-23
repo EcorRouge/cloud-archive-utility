@@ -2,13 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection.PortableExecutable;
 using System.Text;
-using System.Threading.Tasks;
-using EcorRouge.Archive.Utility.ViewModels;
 using Ionic.Zip;
 using log4net;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace EcorRouge.Archive.Utility.Util
 {
@@ -26,6 +22,7 @@ namespace EcorRouge.Archive.Utility.Util
         private int _currentZipEntry = 0;
         private char _pathSeparator = DEFAULT_PATH_SEPARATOR;
         private string _connectorPrefix;
+        private bool _isWebExportOutput;
 
         private static int DetectColumnCount(StreamReader reader, char pathSeparator)
         {
@@ -149,11 +146,14 @@ namespace EcorRouge.Archive.Utility.Util
                 using var reader = createReader();
 
                 string line = null;
+
                 int lineCount = 0;
                 do
                 {
                     line = reader.ReadLine();
                     lineCount++;
+
+                    if (IsWebExportHeader(line)) continue;
 
                     if (!line?.Contains(marker) ?? false)
                     {
@@ -206,18 +206,23 @@ namespace EcorRouge.Archive.Utility.Util
             return result;
         }
 
+        private static bool IsWebExportHeader(string line) => line?.StartsWith("Collector|Drive|Name", StringComparison.InvariantCultureIgnoreCase) ?? false;
+
         private InputFileEntry GetNextEntryInternal(StreamReader reader, int columns)
         {
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();
 
-                if (String.IsNullOrWhiteSpace(line))
+                if (!_isWebExportOutput && IsWebExportHeader(line))
                 {
+                    // mark as web export and skip header line
+                    _isWebExportOutput = true;
+                    _pathSeparator = DEFAULT_PATH_SEPARATOR;
                     continue;
                 }
 
-                if (line.StartsWith("Collector|Drive|Name", StringComparison.InvariantCultureIgnoreCase))
+                if (String.IsNullOrWhiteSpace(line))
                 {
                     continue;
                 }
@@ -230,28 +235,35 @@ namespace EcorRouge.Archive.Utility.Util
 
                 if (_connectorPrefix != null)
                 {
-                    if (!line.Contains(_connectorPrefix))
+                    int indexOfPrefix = line.IndexOf(_connectorPrefix);
+
+                    if (indexOfPrefix < 0)
                     {
                         log.Warn($"Skipping line since it does not contain connector prefix ({_connectorPrefix}). {Environment.NewLine}{line}");
                         continue;
                     }
 
-                    return ParseLineInCloudConnectorFormat(line);
+                    return _isWebExportOutput
+                        ? ParseLineInWebExportFormat(line)
+                        : ParseLineInCloudConnectorFormat(line);
                 }
                 else
                 {
-                    return ParseLineInDefaultFormat(line, columns);
+                    return ParseLineInWebExportFormat(line);
                 }
             }
 
             return null;
         }
 
-        InputFileEntry ParseLineInDefaultFormat(string line, int columns)
-        {
-            var parts = line.Split(_pathSeparator);
 
-            if (columns == 3)
+        InputFileEntry ParseLineInWebExportFormat(string line)
+        {
+            // e.g. AZReveles|sharepoint|Bear Branch59.jpg|?b64?YiE4ZWNUUDRKcmQwcWlhYzJnY1ZwLTZMb1RJZmFqcnFaUGlJN1ZsLXNNZGlrdzRhblFNRFlxUnFmY1RUV3U4dVdPOjAxM0ZQVFpaT09SRlZES0hFUlJWRkxDUFVJWUlNTFlOR0M=|0|04/14/2013|Risk Management|jpg|Media|> 10| < 10KB
+            var parts = line.Split(DEFAULT_PATH_SEPARATOR);
+
+            // some old format? leaving as is just in case
+            if (parts.Length == 3)
             {
                 if (!Int64.TryParse(parts[1], out var length))
                 {
@@ -265,27 +277,40 @@ namespace EcorRouge.Archive.Utility.Util
                     Path = parts[0]
                 };
             }
-            else if (columns == 11)
-            {
-                if (!Int64.TryParse(parts[4], out var length))
-                {
-                    log.Warn($"Unable to parse length: {parts[4]} of file {parts[2]}");
-                }
 
-                return new InputFileEntry()
-                {
-                    FileName = parts[2],
-                    FileSize = length,
-                    Path = parts[3],
-                    RawEntryContent = line
-                };
+            // Searching like this is safer - in case filename contains '|' we will still correctly detect the cloudpath, and we will get the part of the filename with the extension
+            // It would be better to encode the name and the cloudpath together, but Jay doesn't want to for now.
+            string encodedComponent = parts.FirstOrDefault(c => c.StartsWith("?b64?"));
+
+            string cloudPath;
+            int indexOfCloudPath;
+            if (encodedComponent != null)
+            {
+                indexOfCloudPath = Array.IndexOf(parts, encodedComponent);
+                cloudPath = DecodeB64IfNeeded(encodedComponent);
             }
             else
             {
-                log.Warn($"Unsupported number of columns: {columns}!");
-                return null;
+                indexOfCloudPath = 3;
+                cloudPath = parts[indexOfCloudPath];
             }
+
+            string filename = parts[indexOfCloudPath - 1];
+
+            if (!int.TryParse(parts[indexOfCloudPath+1], out var fileSize))
+            {
+                log.Warn($"Unable to parse length: {parts[indexOfCloudPath + 1]} of file {filename}");
+            }
+
+            return new InputFileEntry()
+            {
+                Path = cloudPath,
+                FileName = filename,
+                FileSize = fileSize,
+                RawEntryContent = line
+            };
         }
+
 
         InputFileEntry ParseLineInCloudConnectorFormat(string line)
         {
@@ -298,7 +323,6 @@ namespace EcorRouge.Archive.Utility.Util
 
             // sample 3: gmail
             // ?b64?R29vZ2xlIFdvcmtzcGFjZTogWW91ciBpbnZvaWNlIGlzIGF2YWlsYWJsZSBmb3Igd29ya3NwYWNldGVzdC5vbmxpbmUudHh0|57996|1669928724000|?b64?YWRtaW5Ad29ya3NwYWNldGVzdC5vbmxpbmU6MTg0Y2Y4MjJkMjg2ZjliZjpNZXNzYWdlQm9keQ==:1669928724000:57996:Google Workspace Your invoice is available for workspacetest.online.txt
-
 
             string lastComponent = line;
             string cloudPath = null;
@@ -343,13 +367,12 @@ namespace EcorRouge.Archive.Utility.Util
                 CreatedAtUtc = createdAtUtc ?? modifiedAtUtc,
                 RawEntryContent = line
             };
-
-            string DecodeB64IfNeeded(string target)
-            {
-                return target.StartsWith("?b64?", StringComparison.InvariantCultureIgnoreCase)
-                    ? Encoding.UTF8.GetString(Convert.FromBase64String(target.Substring(5)))
-                    : target;
-            }
+        }
+        string DecodeB64IfNeeded(string target)
+        {
+            return target.StartsWith("?b64?", StringComparison.InvariantCultureIgnoreCase)
+                ? Encoding.UTF8.GetString(Convert.FromBase64String(target.Substring(5)))
+                : target;
         }
 
         public InputFileEntry GetNextEntry()
@@ -364,6 +387,8 @@ namespace EcorRouge.Archive.Utility.Util
                         {
                             _currentZipStream = _zipEntries[_currentZipEntry].OpenReader();
                             _reader = new StreamReader(_currentZipStream);
+
+                            _isWebExportOutput = false;
                         }
                         else
                         {
@@ -395,6 +420,7 @@ namespace EcorRouge.Archive.Utility.Util
             {
                 return GetNextEntryInternal(_reader, _inputFile.Columns);
             }
+
         }
 
         public void Dispose()
