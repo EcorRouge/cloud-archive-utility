@@ -17,11 +17,11 @@ public class ConnectorFacade
         _connector = connector;
         CloudPathSeparator = cloudPathSeparator;
 
-        var prefixes = new List<string>() {_connector.Type};
+        var markers = new List<string>() {_connector.Type};
 
         try
         {
-            prefixes.Add((string) ((dynamic) _connector).Prefix);
+            markers.Add((string) ((dynamic) _connector).Prefix);
         }
         catch (RuntimeBinderException)
         {
@@ -29,9 +29,7 @@ public class ConnectorFacade
                 $"Connector {_connector.GetType().Name} is not supported - only connectors prefixing their results (see Prefix property) are currently supported.");
         }
 
-        prefixes.Add(_connector.Type);
-
-        Prefixes = prefixes.ToArray();
+        Markers = markers.ToArray();
     }
 
     public char CloudPathSeparator { get; }
@@ -42,7 +40,7 @@ public class ConnectorFacade
 
     public string ConnectorCommonType => _connector.CommonType;
 
-    public string[] Prefixes { get; }
+    public string[] Markers { get; }
 
     public void Connect(Dictionary<string, string> credentials) // no params needed - use Credentials prop?
     {

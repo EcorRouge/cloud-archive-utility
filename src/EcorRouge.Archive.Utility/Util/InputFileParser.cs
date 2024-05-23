@@ -83,9 +83,9 @@ namespace EcorRouge.Archive.Utility.Util
                         continue;
 
                     Func<StreamReader> createReader = () => new StreamReader(entry.OpenReader());
-                    result.ConnectorPrefix = DetectConnectorPrefix(createReader, connectorsPrefixes);
+                    result.ConnectorMarker = DetectConnectorPrefix(createReader, connectorsPrefixes);
                     (result.Columns, pathSeparator) = DetectColumnCount(createReader);
-                    log.Debug($"Detected column count: {result.Columns}, separator {pathSeparator}, connector marker {result.ConnectorPrefix}");
+                    log.Debug($"Detected column count: {result.Columns}, separator {pathSeparator}, connector marker {result.ConnectorMarker}");
 
                     if (result.Columns > 0)
                     {
@@ -96,12 +96,12 @@ namespace EcorRouge.Archive.Utility.Util
             else
             {
                 Func<StreamReader> createReader = () => new StreamReader(fileName, Encoding.UTF8);
-                result.ConnectorPrefix = DetectConnectorPrefix(createReader, connectorsPrefixes);
+                result.ConnectorMarker = DetectConnectorPrefix(createReader, connectorsPrefixes);
                 (result.Columns, pathSeparator) = DetectColumnCount(() => new StreamReader(fileName, Encoding.UTF8));
-                log.Debug($"Detected column count: {result.Columns}, separator {pathSeparator}, connector marker {result.ConnectorPrefix}");
+                log.Debug($"Detected column count: {result.Columns}, separator {pathSeparator}, connector marker {result.ConnectorMarker}");
             }
 
-            if (result.Columns == 3 || result.Columns == 11 || result.ConnectorPrefix != null)
+            if (result.Columns == 3 || result.Columns == 11 || result.ConnectorMarker != null)
             {
                 using var parser = OpenFile(result, pathSeparator);
 
@@ -178,7 +178,7 @@ namespace EcorRouge.Archive.Utility.Util
 
             result._pathSeparator = pathSeparator ?? DEFAULT_PATH_SEPARATOR;
             result._inputFile = inputFile;
-            result._connectorPrefix = inputFile.ConnectorPrefix;
+            result._connectorPrefix = inputFile.ConnectorMarker;
 
             if (inputFile.IsZip)
             {

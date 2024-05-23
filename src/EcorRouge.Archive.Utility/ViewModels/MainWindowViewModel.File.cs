@@ -53,12 +53,12 @@ namespace EcorRouge.Archive.Utility.ViewModels
                     TotalFilesToArchive = 0;
                     TotalFileSizeToArchive = 0;
 
-                    string[] connectorsPrefixes = CloudConnectorsManager.Instance.ConnectorsFacades.SelectMany(c => c.Prefixes).ToArray();
-                    _inputFile = InputFileParser.ScanFile(FileName, connectorsPrefixes);
+                    string[] connectorsMarkers = CloudConnectorsManager.Instance.ConnectorsFacades.SelectMany(c => c.Markers).ToArray();
+                    _inputFile = InputFileParser.ScanFile(FileName, connectorsMarkers);
 
-                    if (_inputFile.ConnectorPrefix != null)
+                    if (_inputFile.ConnectorMarker != null)
                     {
-                        SelectConnector(_inputFile.ConnectorPrefix);
+                        SelectConnector(_inputFile.ConnectorMarker);
                     }
 
                     TotalFilesToArchive = _inputFile.TotalFiles;
