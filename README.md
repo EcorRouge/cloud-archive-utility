@@ -43,7 +43,7 @@ Submit-SigningRequest `
 
 ```
 
-6. Run `build-and-deploy.cmd`, it should sign binaries and installer automatically
+6. Run `build-and-sign.cmd`, it should sign binaries and installer automatically
 
 ## Cloud connectors integration
 
