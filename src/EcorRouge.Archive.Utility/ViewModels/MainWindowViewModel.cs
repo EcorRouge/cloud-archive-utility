@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -39,7 +40,8 @@ namespace EcorRouge.Archive.Utility.ViewModels
         public RelayCommand SelectProgressCommand { get; set; }
         public RelayCommand SelectFinishCommand { get; set; }
         
-        public RelayCommand ExitCommand { get; set; }
+        public RelayCommand ExitCommand { get; private set; }
+        public RelayCommand ShowLogsCommand { get; private set; }
 
         public int SelectedPageIndex
         {
@@ -139,6 +141,21 @@ namespace EcorRouge.Archive.Utility.ViewModels
             SelectFinishCommand = new RelayCommand(() =>
             {
                 SelectedPageIndex = TAB_FINISH;
+            });
+
+            ShowLogsCommand = new RelayCommand(() =>
+            {
+                string path = string.Empty;
+
+                try
+                {
+                    path = PathHelper.GetLogsPath();
+                    Process.Start("explorer", path);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to open logs directory: {path}. Exception: {ex}");
+                }
             });
 
             ExitCommand = new RelayCommand(() =>
