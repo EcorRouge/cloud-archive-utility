@@ -53,8 +53,8 @@ namespace EcorRouge.Archive.Utility
                 fa.ImmediateFlush = true;
                 fa.AppendToFile = true;
                 fa.RollingStyle = RollingFileAppender.RollingMode.Size;
-                fa.MaxSizeRollBackups = 20;
-                fa.MaxFileSize = 1 * 1024 * 1024;
+                fa.MaxSizeRollBackups = 3;
+                fa.MaxFileSize = 10 * 1024 * 1024;
                 fa.ActivateOptions();
                 root.AddAppender(fa);
 
