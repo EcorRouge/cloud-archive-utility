@@ -391,12 +391,14 @@ namespace EcorRouge.Archive.Utility
             if (!fInfo.Exists)
                 throw new FileNotFoundException("File not found", fInfo.FullName);
 
-            _metaFile.WriteLine($"{newFileName}|{fInfo.Length}|{createdAt.ToUnixTime()}|{fileName}");
+            long fileSize = fInfo.Length;
 
-            _manifestWriter.WriteLine($"{fileName}|{fInfo.Length}|{createdAt.ToUnixTime()}|{Path.GetFileName(_zipFileName)}|{newFileName}");
+            _metaFile.WriteLine($"{newFileName}|{fileSize}|{createdAt.ToUnixTime()}|{fileName}");
+
+            _manifestWriter.WriteLine($"{fileName}|{fileSize}|{createdAt.ToUnixTime()}|{Path.GetFileName(_zipFileName)}|{newFileName}");
 
             _zipFile.PutNextEntry(newFileName);
-            WriteFileStream(fInfo.FullName, fInfo.Length, cancellationToken);
+            WriteFileStream(fInfo.FullName, fileSize, cancellationToken);
 
             if (_connectorFacade != null)
             {
@@ -404,7 +406,7 @@ namespace EcorRouge.Archive.Utility
             }
 
             _archiveFileList.Add(fileName);
-            _bytesProcessed += fInfo.Length;
+            _bytesProcessed += fileSize;
         }
 
         private async ValueTask DeleteResourceAsync(InputFileEntry entry, CancellationToken cancellationToken)
