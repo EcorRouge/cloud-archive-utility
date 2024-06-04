@@ -398,7 +398,7 @@ namespace EcorRouge.Archive.Utility
 
             await _metaFile.WriteLineAsync($"{newFileName}|{fileSize}|{createdAt?.ToUnixTime().ToString()}|{entry.FileName}");
 
-            await WriteManifestLine(entry.FileName, fileSize.ToString(), createdAt?.ToUnixTime().ToString(), Path.GetFileName(_zipFileName), newFileName);
+            await WriteManifestLine(entry.FileName, fileSize.ToString(), createdAt?.ToString(CultureInfo.InvariantCulture), Path.GetFileName(_zipFileName), newFileName);
 
             _zipFile.PutNextEntry(newFileName);
             WriteFileStream(fInfo.FullName, fileSize, cancellationToken);

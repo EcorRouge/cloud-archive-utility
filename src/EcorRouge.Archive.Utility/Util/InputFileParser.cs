@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -302,12 +303,24 @@ namespace EcorRouge.Archive.Utility.Util
                 log.Warn($"Unable to parse length: {parts[indexOfCloudPath + 1]} of file {filename}");
             }
 
+            DateTime? createdAtUtc = null;
+            string createdDateTimeStr = parts[indexOfCloudPath + 2]; // an: note that according to the input, we currently receive Modified DateTime here rather than Created
+            if (DateTime.TryParse(createdDateTimeStr, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var dt))
+            {
+                createdAtUtc = dt;
+            }
+            else if (!string.IsNullOrWhiteSpace(createdDateTimeStr))
+            {
+                log.Warn($"Unable to parse datetime: {createdDateTimeStr} of file {filename}");
+            }
+
             return new InputFileEntry()
             {
                 Path = cloudPath,
                 FileName = filename,
                 FileSize = fileSize,
-                RawEntryContent = line
+                RawEntryContent = line,
+                CreatedAtUtc = createdAtUtc
             };
         }
 
