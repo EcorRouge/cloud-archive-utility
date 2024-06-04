@@ -381,7 +381,8 @@ namespace EcorRouge.Archive.Utility
             if (_connectorFacade != null)
             {
                 string downloadToPath = Path.Combine(DownloadsDir, newFileName);
-                await _connectorFacade.DownloadAsync(entry.Path, downloadToPath, cancellationToken);
+                //await _connectorFacade.DownloadAsync(entry.Path, downloadToPath, cancellationToken);
+                File.WriteAllText(downloadToPath, "asdasd");
                 fInfo = new FileInfo(downloadToPath);
                 createdAt = entry.CreatedAtUtc;
             }
@@ -671,6 +672,7 @@ namespace EcorRouge.Archive.Utility
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
+                _filesFailed++;
                 log.Error($"Failed to delete {resourcePath}", ex);
             }
 
