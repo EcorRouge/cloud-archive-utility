@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -31,6 +32,7 @@ namespace EcorRouge.Archive.Utility
         internal static readonly ILog log = LogManager.GetLogger(typeof(ArchiverWorker));
 
         private const int MAX_WAIT_TIME = 60;
+        private const char CSV_SEP = '|';
 
         private PluginBase _plugin;
         private Dictionary<string, object> _pluginProperties;
@@ -192,7 +194,7 @@ namespace EcorRouge.Archive.Utility
             }
             else
             {
-                _manifestFileName = Path.Combine(PathHelper.GetTempPath(true), $"_manifest-{DateTime.Now:yyyy-MM-dd-HH-mm}.txt");
+                _manifestFileName = Path.Combine(PathHelper.GetTempPath(true), $"_manifest-{DateTime.Now:yyyy-MM-dd-HH-mm}.csv");
 
                 if (File.Exists(_manifestFileName))
                 {
@@ -200,6 +202,8 @@ namespace EcorRouge.Archive.Utility
                 }
 
                 _manifestWriter = new StreamWriter(_manifestFileName, false, Encoding.UTF8);
+                await _manifestWriter.WriteLineAsync($"sep={CSV_SEP}");
+                await WriteManifestLine("File Name", "File Size", "Created At (UTC)", "Zip File Name", "Generated File Name");
             }
 
             _savedState.ManifestFileName = _manifestFileName;
@@ -369,22 +373,22 @@ namespace EcorRouge.Archive.Utility
 
         private async ValueTask ProcessResourceAsync(InputFileEntry entry, CancellationToken cancellationToken)
         {
-            string fileName = entry.Path;
-            string newFileName = Guid.NewGuid() + Path.GetExtension(fileName);
+            string newFileName = Guid.NewGuid() + Path.GetExtension(entry.FileName);
 
             FileInfo fInfo;
-            DateTime createdAt;
+            DateTime? createdAt;
 
             if (_connectorFacade != null)
             {
                 string downloadToPath = Path.Combine(DownloadsDir, newFileName);
-                await _connectorFacade.DownloadAsync(fileName, downloadToPath, cancellationToken);
+                //await _connectorFacade.DownloadAsync(entry.Path, downloadToPath, cancellationToken);
+                File.WriteAllText(downloadToPath, "asdasd");
                 fInfo = new FileInfo(downloadToPath);
-                createdAt = entry.CreatedAtUtc ?? fInfo.CreationTimeUtc;
+                createdAt = entry.CreatedAtUtc;
             }
             else
             {
-                fInfo = new FileInfo(fileName);
+                fInfo = new FileInfo(entry.Path);
                 createdAt = fInfo.CreationTimeUtc;
             }
 
@@ -393,9 +397,9 @@ namespace EcorRouge.Archive.Utility
 
             long fileSize = fInfo.Length;
 
-            _metaFile.WriteLine($"{newFileName}|{fileSize}|{createdAt.ToUnixTime()}|{fileName}");
+            await _metaFile.WriteLineAsync($"{newFileName}|{fileSize}|{createdAt?.ToUnixTime().ToString()}|{entry.FileName}");
 
-            _manifestWriter.WriteLine($"{fileName}|{fileSize}|{createdAt.ToUnixTime()}|{Path.GetFileName(_zipFileName)}|{newFileName}");
+            await WriteManifestLine(entry.FileName, fileSize.ToString(), createdAt?.ToString(CultureInfo.InvariantCulture), Path.GetFileName(_zipFileName), newFileName);
 
             _zipFile.PutNextEntry(newFileName);
             WriteFileStream(fInfo.FullName, fileSize, cancellationToken);
@@ -405,10 +409,13 @@ namespace EcorRouge.Archive.Utility
                 fInfo.Delete();
             }
 
-            _archiveFileList.Add(fileName);
+            _archiveFileList.Add(entry.Path);
             _bytesProcessed += fileSize;
         }
 
+        private Task WriteManifestLine(string fileName, string fileSize, string createdAt, string zipFileName, string newFileName) =>
+            _manifestWriter.WriteLineAsync($"{fileName}{CSV_SEP}{fileSize}{CSV_SEP}{createdAt}{CSV_SEP}{zipFileName}{CSV_SEP}{newFileName}");
+        
         private async ValueTask DeleteResourceAsync(InputFileEntry entry, CancellationToken cancellationToken)
         {
             long fileSize = entry.FileSize;
@@ -523,7 +530,7 @@ namespace EcorRouge.Archive.Utility
                 }
                 catch (Exception ex)
                 {
-                    if (!success) // let's ignore errors in close session
+                    if (!success & ex is not OperationCanceledException) // let's ignore errors in close session and on cancellation
                     {
                         log.Error("Error uploading archive", ex);
                         retryAttempts++;
@@ -624,9 +631,16 @@ namespace EcorRouge.Archive.Utility
             _deletedFilesCount = 0;
             DeletingProgress?.Invoke(this, EventArgs.Empty);
 
-            foreach (var fileName in _archiveFileList)
+            try
             {
-                await DeleteResourceAsync(fileName, cancellationToken);
+                foreach (var fileName in _archiveFileList)
+                {
+                    await DeleteResourceAsync(fileName, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException cex)
+            {
+                log.Info($"Deletion canceled.");
             }
 
             // delete temporarily downloaded files which were not deleted due to processing errors
@@ -656,8 +670,9 @@ namespace EcorRouge.Archive.Utility
                     File.Delete(resourcePath);
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
+                _filesFailed++;
                 log.Error($"Failed to delete {resourcePath}", ex);
             }
 
