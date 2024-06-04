@@ -154,7 +154,7 @@ namespace EcorRouge.Archive.Utility.Util
                     line = reader.ReadLine();
                     lineCount++;
 
-                    if (IsWebExportHeader(line)) continue;
+                    if (string.IsNullOrWhiteSpace(line) || IsWebExportHeader(line)) continue;
 
                     if (!line?.Contains(marker) ?? false)
                     {
