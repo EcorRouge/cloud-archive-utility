@@ -529,7 +529,7 @@ namespace EcorRouge.Archive.Utility
                 }
                 catch (Exception ex)
                 {
-                    if (!success) // let's ignore errors in close session
+                    if (!success & ex is not OperationCanceledException) // let's ignore errors in close session and on cancellation
                     {
                         log.Error("Error uploading archive", ex);
                         retryAttempts++;
@@ -630,9 +630,16 @@ namespace EcorRouge.Archive.Utility
             _deletedFilesCount = 0;
             DeletingProgress?.Invoke(this, EventArgs.Empty);
 
-            foreach (var fileName in _archiveFileList)
+            try
             {
-                await DeleteResourceAsync(fileName, cancellationToken);
+                foreach (var fileName in _archiveFileList)
+                {
+                    await DeleteResourceAsync(fileName, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException cex)
+            {
+                log.Info($"Deletion canceled.");
             }
 
             // delete temporarily downloaded files which were not deleted due to processing errors
@@ -662,7 +669,7 @@ namespace EcorRouge.Archive.Utility
                     File.Delete(resourcePath);
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 log.Error($"Failed to delete {resourcePath}", ex);
             }
