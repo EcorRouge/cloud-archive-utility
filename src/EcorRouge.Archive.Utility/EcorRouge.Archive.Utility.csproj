@@ -4,7 +4,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net7.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
-    <Version>2.1.3.0</Version>
+    <Version>2.1.4.0</Version>
     <OutputPath>..\..\build</OutputPath>
     <PublishDir>..\..\build</PublishDir>
   </PropertyGroup>
@@ -29,3 +29,4 @@
   </ItemGroup>
 
 </Project>
+
