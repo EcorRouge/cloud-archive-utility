@@ -381,8 +381,7 @@ namespace EcorRouge.Archive.Utility
             if (_connectorFacade != null)
             {
                 string downloadToPath = Path.Combine(DownloadsDir, newFileName);
-                //await _connectorFacade.DownloadAsync(entry.Path, downloadToPath, cancellationToken);
-                File.WriteAllText(downloadToPath, "asdasd");
+                await _connectorFacade.DownloadAsync(entry.Path, downloadToPath, cancellationToken);
                 fInfo = new FileInfo(downloadToPath);
                 createdAt = entry.CreatedAtUtc;
             }
