@@ -314,13 +314,20 @@ namespace EcorRouge.Archive.Utility.Util
                 log.Warn($"Unable to parse datetime: {createdDateTimeStr} of file {filename}");
             }
 
+            string origPath = string.Empty;
+            if (parts.Length <= indexOfCloudPath + 8 + 1)
+            {
+                origPath = parts[indexOfCloudPath + 8];
+            }
+
             return new InputFileEntry()
             {
                 Path = cloudPath,
                 FileName = filename,
                 FileSize = fileSize,
                 RawEntryContent = line,
-                CreatedAtUtc = createdAtUtc
+                CreatedAtUtc = createdAtUtc,
+                OriginalPath = origPath
             };
         }
 

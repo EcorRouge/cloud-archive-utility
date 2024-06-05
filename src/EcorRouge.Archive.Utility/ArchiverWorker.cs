@@ -203,7 +203,7 @@ namespace EcorRouge.Archive.Utility
 
                 _manifestWriter = new StreamWriter(_manifestFileName, false, Encoding.UTF8);
                 await _manifestWriter.WriteLineAsync($"sep={CSV_SEP}");
-                await WriteManifestLine("File Name", "File Size", "Created At (UTC)", "Zip File Name", "Generated File Name");
+                await WriteManifestLine("File Name", "File Size", "Created At (UTC)", "Zip File Name", "Generated File Name", "Original Path");
             }
 
             _savedState.ManifestFileName = _manifestFileName;
@@ -398,7 +398,14 @@ namespace EcorRouge.Archive.Utility
 
             await _metaFile.WriteLineAsync($"{newFileName}|{fileSize}|{createdAt?.ToUnixTime().ToString()}|{entry.FileName}");
 
-            await WriteManifestLine(entry.FileName, fileSize.ToString(), createdAt?.ToString(CultureInfo.InvariantCulture), Path.GetFileName(_zipFileName), newFileName);
+            await WriteManifestLine(
+                entry.FileName,
+                fileSize.ToString(),
+                createdAt?.ToString(CultureInfo.InvariantCulture),
+                Path.GetFileName(_zipFileName),
+                newFileName,
+                entry.OriginalPath
+            );
 
             _zipFile.PutNextEntry(newFileName);
             WriteFileStream(fInfo.FullName, fileSize, cancellationToken);
@@ -412,8 +419,8 @@ namespace EcorRouge.Archive.Utility
             _bytesProcessed += fileSize;
         }
 
-        private Task WriteManifestLine(string fileName, string fileSize, string createdAt, string zipFileName, string newFileName) =>
-            _manifestWriter.WriteLineAsync($"{fileName}{CSV_SEP}{fileSize}{CSV_SEP}{createdAt}{CSV_SEP}{zipFileName}{CSV_SEP}{newFileName}");
+        private Task WriteManifestLine(string fileName, string fileSize, string createdAt, string zipFileName, string newFileName, string origPath) =>
+            _manifestWriter.WriteLineAsync($"{fileName}{CSV_SEP}{fileSize}{CSV_SEP}{createdAt}{CSV_SEP}{zipFileName}{CSV_SEP}{newFileName}{CSV_SEP}{origPath}");
         
         private async ValueTask DeleteResourceAsync(InputFileEntry entry, CancellationToken cancellationToken)
         {
