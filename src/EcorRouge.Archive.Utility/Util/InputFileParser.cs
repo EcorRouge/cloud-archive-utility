@@ -102,7 +102,7 @@ namespace EcorRouge.Archive.Utility.Util
                 log.Debug($"Detected column count: {result.Columns}, separator {pathSeparator}, connector marker {result.ConnectorMarker}");
             }
 
-            if (result.Columns == 3 || result.Columns == 11 || result.ConnectorMarker != null)
+            if (result.Columns == 3 || result.Columns >= 11 || result.ConnectorMarker != null)
             {
                 using var parser = OpenFile(result, pathSeparator);
 
