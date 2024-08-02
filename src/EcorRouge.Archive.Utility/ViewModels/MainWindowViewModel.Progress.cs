@@ -250,6 +250,8 @@ namespace EcorRouge.Archive.Utility.ViewModels
             _savedState.PluginType = plugin?.ProviderName;
             _savedState.ConnectorType = sourceConnector?.ConnectorType;
             _savedState.DeleteFiles = DeleteFilesAfterUpload;
+            _savedState.EncryptFiles = EncryptFiles;
+            _savedState.KeypairFilename = KeypairFileName;
             _savedState.InputFileName = _fileName;
             _savedState.TotalFilesToArchive = _totalFilesToArchive;
             _savedState.TotalFilesSizeToArchive = _totalFileSizeToArchive;

@@ -315,9 +315,13 @@ namespace EcorRouge.Archive.Utility.Util
             }
 
             string origPath = string.Empty;
-            if (parts.Length <= indexOfCloudPath + 8 + 1)
+            if (parts.Length >= indexOfCloudPath + 8 + 1)
             {
                 origPath = parts[indexOfCloudPath + 8];
+            }
+            else
+            {
+                origPath = cloudPath;
             }
 
             return new InputFileEntry()

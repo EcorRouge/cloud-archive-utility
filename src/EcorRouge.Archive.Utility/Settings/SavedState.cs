@@ -39,6 +39,8 @@ namespace EcorRouge.Archive.Utility.Settings
             set => _connectorProperties = value;
         }
 
+        public bool EncryptFiles { get; set; }
+        public string KeypairFilename { get; set; }
         public bool DeleteFiles { get; set; }
         public int MaximumFiles { get; set; }
         public int MaximumArchiveSizeMb { get; set; }
