@@ -13,6 +13,8 @@ using EcorRouge.Archive.Utility.Extensions;
 using EcorRouge.Archive.Utility.Plugins;
 using EcorRouge.Archive.Utility.Settings;
 using EcorRouge.Archive.Utility.Util;
+using System.Windows.Forms;
+using System.Security.Cryptography;
 
 namespace EcorRouge.Archive.Utility
 {
@@ -60,6 +62,8 @@ namespace EcorRouge.Archive.Utility
         private string _metaFileName;
         private StreamWriter _metaFile;
         private ZipOutputStream _zipFile;
+        private Aes _aesAlg;
+        private FileStream _outFile;
         private string _zipFileName;
         private InputFile _inputFile;
         private List<string> _archiveFileList;
@@ -440,6 +444,18 @@ namespace EcorRouge.Archive.Utility
             return _filesInArchive >= _savedState.MaximumFiles || _zipFile.Position / (1024 * 1024) >= _savedState.MaximumArchiveSizeMb;
         }
 
+        private void WriteEncryptedFileHeader()
+        {
+            var header = Encoding.ASCII.GetBytes("ERAU");
+            _outFile.Write(header, 0, header.Length);
+            _outFile.Write(BitConverter.GetBytes(1));
+            _outFile.Write(BitConverter.GetBytes(_aesAlg.KeySize));
+
+            //TODO: encrypt key
+            _outFile.Write(_aesAlg.IV, 0, _aesAlg.IV.Length);
+            _outFile.Write(_aesAlg.Key, 0, _aesAlg.Key.Length);
+        }
+
         private void OpenZipFile()
         {
             var guid = Guid.NewGuid();
@@ -451,13 +467,36 @@ namespace EcorRouge.Archive.Utility
 
             _zipFileName = Path.Combine(PathHelper.GetTempPath(), guid + ".zip");
 
+            if(_savedState.EncryptFiles)
+            {
+                _zipFileName += ".enc";
+            }
+
             _savedState.BytesProcessed = BytesProcessed;
             _savedState.FilesProcessed = FilesProcessed;
             _savedState.ArchiveFileName = _zipFileName;
             _savedState.TotalArchivedSize = _totalArchiveSize;
             _savedState.Save();
 
-            _zipFile = new ZipOutputStream(_zipFileName);
+            if (_savedState.EncryptFiles)
+            {
+                _aesAlg = Aes.Create();
+                _aesAlg.KeySize = 256;                
+                _aesAlg.GenerateIV();
+                _aesAlg.GenerateKey();
+
+                WriteEncryptedFileHeader();
+
+                //TODO: Generate encryption key and save file header
+                _outFile = new FileStream(_zipFileName, FileMode.Create, FileAccess.Write);
+                
+
+                _zipFile = new ZipOutputStream(_outFile);
+            } else
+            {
+                _zipFile = new ZipOutputStream(_zipFileName);
+            }
+
             _zipFile.EnableZip64 = Zip64Option.Always;
 
             _filesInArchive = 0;
