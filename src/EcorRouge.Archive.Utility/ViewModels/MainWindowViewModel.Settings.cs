@@ -252,58 +252,6 @@ namespace EcorRouge.Archive.Utility.ViewModels
             }
         }
 
-        private RSA ImportKeypair(string filename)
-        {
-            var rsa = RSA.Create();
-
-            var privateKey = new StringBuilder();
-            var publicKey = new StringBuilder();
-
-            bool publicSection = false, privateSection = false;
-
-            using (var reader = new StreamReader(filename))
-            {
-                while(!reader.EndOfStream)
-                {
-                    var line = reader.ReadLine();
-                    if (String.IsNullOrWhiteSpace(line))
-                        continue;
-
-                    if(privateSection || line.StartsWith("-----BEGIN RSA PRIVATE"))
-                    {
-                        privateSection = true;
-                        privateKey.AppendLine(line);
-
-                        if(line.StartsWith("-----END RSA"))
-                            privateSection = false;
-                    }
-
-                    if (publicSection || line.StartsWith("-----BEGIN RSA PUBLIC"))
-                    {
-                        publicSection = true;
-                        publicKey.AppendLine(line);
-
-                        if (line.StartsWith("-----END RSA"))
-                            publicSection = false;
-                    }
-                }
-            }
-
-            if(privateKey.Length == 0)
-            {
-                throw new ArgumentException("Missing private key!");
-            }
-            if (publicKey.Length == 0)
-            {
-                throw new ArgumentException("Missing public key!");
-            }
-
-            rsa.ImportFromPem(privateKey.ToString().ToCharArray());
-            rsa.ImportFromPem(publicKey.ToString().ToCharArray());
-
-            return rsa;
-        }
-
         public void ChooseKeypair()
         {
             var ofd = new OpenFileDialog();
@@ -313,7 +261,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             {
                 try
                 {
-                    _ = ImportKeypair(ofd.FileName);
+                    _ = ArchiverWorker.ImportKeypair(ofd.FileName);
                     KeypairFileName = ofd.FileName;
                 }
                 catch (Exception ex)

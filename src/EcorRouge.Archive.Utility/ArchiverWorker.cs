@@ -62,7 +62,10 @@ namespace EcorRouge.Archive.Utility
         private string _metaFileName;
         private StreamWriter _metaFile;
         private ZipOutputStream _zipFile;
+        private RSA _rsa;
         private Aes _aesAlg;
+        private ICryptoTransform _encryptor;
+        private CryptoStream _cryptoStream;
         private FileStream _outFile;
         private string _zipFileName;
         private InputFile _inputFile;
@@ -97,6 +100,58 @@ namespace EcorRouge.Archive.Utility
         public ArchiverState State { get; private set; }
 
         public string DownloadsDir { get; } = Path.Combine(PathHelper.GetTempPath(), "Downloads");
+
+        public static RSA ImportKeypair(string filename)
+        {
+            var rsa = RSA.Create();
+
+            var privateKey = new StringBuilder();
+            var publicKey = new StringBuilder();
+
+            bool publicSection = false, privateSection = false;
+
+            using (var reader = new StreamReader(filename))
+            {
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    if (String.IsNullOrWhiteSpace(line))
+                        continue;
+
+                    if (privateSection || line.StartsWith("-----BEGIN RSA PRIVATE"))
+                    {
+                        privateSection = true;
+                        privateKey.AppendLine(line);
+
+                        if (line.StartsWith("-----END RSA"))
+                            privateSection = false;
+                    }
+
+                    if (publicSection || line.StartsWith("-----BEGIN RSA PUBLIC"))
+                    {
+                        publicSection = true;
+                        publicKey.AppendLine(line);
+
+                        if (line.StartsWith("-----END RSA"))
+                            publicSection = false;
+                    }
+                }
+            }
+
+            if (privateKey.Length == 0)
+            {
+                throw new ArgumentException("Missing private key!");
+            }
+            if (publicKey.Length == 0)
+            {
+                throw new ArgumentException("Missing public key!");
+            }
+
+            rsa.ImportFromPem(privateKey.ToString().ToCharArray());
+            rsa.ImportFromPem(publicKey.ToString().ToCharArray());
+
+            return rsa;
+        }
 
         public ArchiverWorker(PluginBase plugin, ConnectorFacade connectorFacade, SavedState savedState, InputFile inputFile)
         {
@@ -190,6 +245,22 @@ namespace EcorRouge.Archive.Utility
             IsBusy = true;
 
             ChangeState(ArchiverState.Initializing);
+
+            if(_savedState.EncryptFiles)
+            {
+                try
+                {
+                    _rsa = ImportKeypair(_savedState.KeypairFilename);
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"Error importing selected keypair {_savedState.KeypairFilename}: {ex.Message}", ex);
+
+                    _savedState.EncryptFiles = false;
+                    _savedState.KeypairFilename = null;
+                    _savedState.Save();
+                }
+            }
 
             if (!_savedState.IsEmpty)
             {
@@ -441,7 +512,14 @@ namespace EcorRouge.Archive.Utility
 
         private bool ShouldFlushZip()
         {
-            return _filesInArchive >= _savedState.MaximumFiles || _zipFile.Position / (1024 * 1024) >= _savedState.MaximumArchiveSizeMb;
+            if (_savedState.EncryptFiles)
+            {
+                return _filesInArchive >= _savedState.MaximumFiles || _filesSizeInArchive / (1024 * 1024) >= _savedState.MaximumArchiveSizeMb;
+            }
+            else
+            {
+                return _filesInArchive >= _savedState.MaximumFiles || _zipFile.Position / (1024 * 1024) >= _savedState.MaximumArchiveSizeMb;
+            }
         }
 
         private void WriteEncryptedFileHeader()
@@ -451,9 +529,13 @@ namespace EcorRouge.Archive.Utility
             _outFile.Write(BitConverter.GetBytes(1));
             _outFile.Write(BitConverter.GetBytes(_aesAlg.KeySize));
 
-            //TODO: encrypt key
-            _outFile.Write(_aesAlg.IV, 0, _aesAlg.IV.Length);
-            _outFile.Write(_aesAlg.Key, 0, _aesAlg.Key.Length);
+            var iv = _rsa.Encrypt(_aesAlg.IV, RSAEncryptionPadding.Pkcs1);
+            _outFile.Write(BitConverter.GetBytes(iv.Length));
+            _outFile.Write(iv, 0, iv.Length);
+
+            var key = _rsa.Encrypt(_aesAlg.Key, RSAEncryptionPadding.Pkcs1);
+            _outFile.Write(BitConverter.GetBytes(key.Length));
+            _outFile.Write(key, 0, key.Length);
         }
 
         private void OpenZipFile()
@@ -485,13 +567,13 @@ namespace EcorRouge.Archive.Utility
                 _aesAlg.GenerateIV();
                 _aesAlg.GenerateKey();
 
+                _encryptor = _aesAlg.CreateEncryptor(_aesAlg.Key, _aesAlg.IV);
+                _outFile = new FileStream(_zipFileName, FileMode.Create, FileAccess.Write);
+
                 WriteEncryptedFileHeader();
 
-                //TODO: Generate encryption key and save file header
-                _outFile = new FileStream(_zipFileName, FileMode.Create, FileAccess.Write);
-                
-
-                _zipFile = new ZipOutputStream(_outFile);
+                _cryptoStream = new CryptoStream(_outFile, _encryptor, CryptoStreamMode.Write, true);
+                _zipFile = new ZipOutputStream(_cryptoStream, true);
             } else
             {
                 _zipFile = new ZipOutputStream(_zipFileName);
@@ -519,7 +601,14 @@ namespace EcorRouge.Archive.Utility
                 totalBytes += bytesRead;
 
                 _filesSizeInArchive += bytesRead;
-                _zipFileSize = _zipFile.Position;
+                if (_savedState.EncryptFiles)
+                {
+                    _zipFileSize = _filesSizeInArchive;
+                }
+                else
+                {
+                    _zipFileSize = _zipFile.Position;
+                }
 
                 ArchiveFileProgress = totalBytes * 100.0 / totalSize;
                 ArchivingProgress?.Invoke(this, EventArgs.Empty);
@@ -633,6 +722,35 @@ namespace EcorRouge.Archive.Utility
 
             _zipFile.Close();
             await _zipFile.DisposeAsync();
+
+            if(_savedState.EncryptFiles)
+            {
+                if (_cryptoStream != null)
+                {
+                    _cryptoStream.Close();
+                    _cryptoStream.Dispose();
+                    _cryptoStream = null;
+                }
+
+                if(_encryptor != null)
+                {
+                    _encryptor.Dispose();
+                    _encryptor = null;
+                }
+
+                if(_aesAlg != null)
+                {
+                    _aesAlg.Dispose();
+                    _aesAlg = null;
+                }
+
+                if(_outFile != null)
+                {
+                    _outFile.Close();
+                    _outFile.Dispose();
+                    _outFile = null;
+                }
+            }
 
             _zipFile = null;
 
