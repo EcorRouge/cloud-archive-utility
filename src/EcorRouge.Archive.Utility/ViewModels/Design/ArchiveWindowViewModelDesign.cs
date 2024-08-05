@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace EcorRouge.Archive.Utility.ViewModels.Design
 {
-    public class MainWindowViewModelDesign : MainWindowViewModel
+    public class ArchiveWindowViewModelDesign : ArchiveWindowViewModel
     {
-        public MainWindowViewModelDesign()
+        public ArchiveWindowViewModelDesign()
         {
             SelectedPageIndex = TAB_SELECT_FILE;
 

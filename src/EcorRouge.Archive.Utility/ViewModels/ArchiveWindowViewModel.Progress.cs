@@ -19,7 +19,7 @@ using EcorRouge.Archive.Utility.Util;
 
 namespace EcorRouge.Archive.Utility.ViewModels
 {
-    public partial class MainWindowViewModel
+    public partial class ArchiveWindowViewModel
     {
         private bool _canCancelProcess = false;
         private string _archivingLabel;

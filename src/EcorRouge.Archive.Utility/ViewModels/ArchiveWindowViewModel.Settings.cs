@@ -14,7 +14,7 @@ using System.Text;
 
 namespace EcorRouge.Archive.Utility.ViewModels
 {
-    public partial class MainWindowViewModel
+    public partial class ArchiveWindowViewModel
     {
         private const int MODE_UPLOAD = 0;
         private const int MODE_DELETE = 1;

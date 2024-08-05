@@ -1,18 +1,18 @@
-﻿using System;
+﻿using EcorRouge.Archive.Utility.CloudConnectors;
+using EcorRouge.Archive.Utility.Util;
+using Microsoft.Toolkit.Mvvm.Input;
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using EcorRouge.Archive.Utility.CloudConnectors;
-using EcorRouge.Archive.Utility.Util;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Win32;
 
 namespace EcorRouge.Archive.Utility.ViewModels
 {
-    public partial class MainWindowViewModel
+    public partial class ExtractWindowViewModel
     {
         private CancellationTokenSource _fileOpenCts;
 
@@ -53,16 +53,14 @@ namespace EcorRouge.Archive.Utility.ViewModels
                     TotalFilesToArchive = 0;
                     TotalFileSizeToArchive = 0;
 
-                    string[] connectorsMarkers = CloudConnectorsManager.Instance.ConnectorsFacades.SelectMany(c => c.Markers).ToArray();
+                    /*
                     _inputFile = InputFileParser.ScanFile(FileName, connectorsMarkers);
-
-                    if (_inputFile.ConnectorMarker != null)
-                    {
-                        SelectConnector(_inputFile.ConnectorMarker);
-                    }
 
                     TotalFilesToArchive = _inputFile.TotalFiles;
                     TotalFileSizeToArchive = _inputFile.TotalFilesSize;
+                    */
+
+                    //TODO: Scan manifest!
                 }, _fileOpenCts.Token).ContinueWith(t =>
                 {
                     _fileLoading = false;
