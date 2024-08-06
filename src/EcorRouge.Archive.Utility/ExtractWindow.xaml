@@ -61,20 +61,20 @@
                      />
                         
                         <RadioButton Style="{StaticResource NavItemStyle}" 
-                     ToolTip="Select files" 
-                     IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=1}" 
-                     IsEnabled="{Binding CanSelectSettings}"
-                     Command="{Binding SelectSettingsCommand}"
+                     ToolTip="View files" 
+                     IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=2}" 
+                     IsEnabled="{Binding CanSelectViewFiles}"
+                     Command="{Binding SelectViewFilesCommand}"
                      />
 
                         <RadioButton Style="{StaticResource NavItemStyle}" 
-                     ToolTip="Progress" IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=2}" 
+                     ToolTip="Progress" IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=3}" 
                      IsEnabled="{Binding CanSelectProgress}"
                      Command="{Binding SelectProgressCommand}"
                      />
                         <RadioButton Style="{StaticResource NavItemStyle}" 
                      ToolTip="Finish" 
-                     IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=3}" 
+                     IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=4}" 
                      IsEnabled="{Binding CanSelectFinish}"
                      Command="{Binding SelectFinishCommand}"
                      />

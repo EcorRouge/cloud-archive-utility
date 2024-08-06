@@ -19,15 +19,17 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
         public const int TAB_SELECT_FILE = 0;
         public const int TAB_SETTINGS = 1;
-        public const int TAB_PROGRESS = 2;
-        public const int TAB_FINISH = 3;
+        public const int TAB_VIEW_FILES = 2;
+        public const int TAB_PROGRESS = 3;
+        public const int TAB_FINISH = 4;
 
         private int _selectedPageIndex = TAB_SELECT_FILE;
         private string _fileName;
-        private long _totalFilesToArchive;
-        private long _totalFileSizeToArchive;
+        private long _totalFilesInArchive;
+        private long _totalFileSizeInArchive;
         private bool _canSelectFile = true;
         private bool _canSelectSettings = false;
+        private bool _canSelectViewFiles = false;
         private bool _canSelectProgress = false;
         private bool _canSelectFinish = false;
 
@@ -35,6 +37,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
         public RelayCommand SelectFileCommand { get; set; }
         public RelayCommand SelectSettingsCommand { get; set; }
+        public RelayCommand SelectViewFilesCommand { get; set; }
         public RelayCommand SelectProgressCommand { get; set; }
         public RelayCommand SelectFinishCommand { get; set; }
 
@@ -53,16 +56,16 @@ namespace EcorRouge.Archive.Utility.ViewModels
             set => SetProperty(ref _fileName, value);
         }
 
-        public long TotalFilesToArchive
+        public long TotalFilesInArchive
         {
-            get => _totalFilesToArchive;
-            set => SetProperty(ref _totalFilesToArchive, value);
+            get => _totalFilesInArchive;
+            set => SetProperty(ref _totalFilesInArchive, value);
         }
 
-        public long TotalFileSizeToArchive
+        public long TotalFileSizeInArchive
         {
-            get => _totalFileSizeToArchive;
-            set => SetProperty(ref _totalFileSizeToArchive, value);
+            get => _totalFileSizeInArchive;
+            set => SetProperty(ref _totalFileSizeInArchive, value);
         }
 
         public bool CanSelectFile
@@ -75,6 +78,12 @@ namespace EcorRouge.Archive.Utility.ViewModels
         {
             get => _canSelectSettings;
             set => SetProperty(ref _canSelectSettings, value);
+        }
+
+        public bool CanSelectViewFiles
+        {
+            get => _canSelectViewFiles;
+            set => SetProperty(ref _canSelectViewFiles, value);
         }
 
         public bool CanSelectProgress

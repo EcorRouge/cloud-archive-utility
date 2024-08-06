@@ -18,7 +18,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
         private bool _canBrowseFile = true;
         private bool _fileLoading;
-        private InputFile _inputFile;
+        private ManifestFile _inputFile;
 
         public RelayCommand BrowseFileCommand { get; set; }
 
@@ -50,22 +50,19 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 {
                     _fileLoading = true;
 
-                    TotalFilesToArchive = 0;
-                    TotalFileSizeToArchive = 0;
+                    TotalFilesInArchive = 0;
+                    TotalFileSizeInArchive = 0;
+                    
+                    _inputFile = ManifestFileParser.ScanFile(FileName);
 
-                    /*
-                    _inputFile = InputFileParser.ScanFile(FileName, connectorsMarkers);
+                    TotalFilesInArchive = _inputFile.TotalFiles;
+                    TotalFileSizeInArchive = _inputFile.TotalFilesSize;                    
 
-                    TotalFilesToArchive = _inputFile.TotalFiles;
-                    TotalFileSizeToArchive = _inputFile.TotalFilesSize;
-                    */
-
-                    //TODO: Scan manifest!
                 }, _fileOpenCts.Token).ContinueWith(t =>
                 {
                     _fileLoading = false;
                     CanBrowseFile = true;
-                    CanSelectSettings = TotalFilesToArchive > 0;
+                    CanSelectSettings = TotalFilesInArchive > 0;
 
                     if (t.Exception != null)
                     {
