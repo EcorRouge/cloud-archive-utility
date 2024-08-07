@@ -62,11 +62,11 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 {
                     _fileLoading = false;
                     CanBrowseFile = true;
-                    CanSelectSettings = TotalFilesInArchive > 0;
+                    CanSelectViewFiles = TotalFilesInArchive > 0;
 
                     if (t.Exception != null)
                     {
-                        CanSelectSettings = false;
+                        CanSelectViewFiles = false;
                     }
                 });
             }

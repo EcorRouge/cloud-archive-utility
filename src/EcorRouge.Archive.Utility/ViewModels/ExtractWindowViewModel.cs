@@ -74,17 +74,18 @@ namespace EcorRouge.Archive.Utility.ViewModels
             set => SetProperty(ref _canSelectFile, value);
         }
 
+        public bool CanSelectViewFiles
+        {
+            get => _canSelectViewFiles;
+            set => SetProperty(ref _canSelectViewFiles, value);
+        }
+
         public bool CanSelectSettings
         {
             get => _canSelectSettings;
             set => SetProperty(ref _canSelectSettings, value);
         }
 
-        public bool CanSelectViewFiles
-        {
-            get => _canSelectViewFiles;
-            set => SetProperty(ref _canSelectViewFiles, value);
-        }
 
         public bool CanSelectProgress
         {
