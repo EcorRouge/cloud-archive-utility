@@ -18,8 +18,8 @@ namespace EcorRouge.Archive.Utility.ViewModels
         internal static readonly ILog log = LogManager.GetLogger(typeof(ExtractWindowViewModel));
 
         public const int TAB_SELECT_FILE = 0;
-        public const int TAB_SETTINGS = 1;
-        public const int TAB_VIEW_FILES = 2;
+        public const int TAB_VIEW_FILES = 1;
+        public const int TAB_SETTINGS = 2;        
         public const int TAB_PROGRESS = 3;
         public const int TAB_FINISH = 4;
 

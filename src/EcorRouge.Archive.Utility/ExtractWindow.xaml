@@ -53,18 +53,19 @@
                      IsEnabled="{Binding CanSelectFile}"
                      Command="{Binding SelectFileCommand}"
         />
-                        <RadioButton Style="{StaticResource NavItemStyle}" 
-                     ToolTip="Settings" 
-                     IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=1}" 
-                     IsEnabled="{Binding CanSelectSettings}"
-                     Command="{Binding SelectSettingsCommand}"
-                     />
-                        
+                       
                         <RadioButton Style="{StaticResource NavItemStyle}" 
                      ToolTip="View files" 
-                     IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=2}" 
+                     IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=1}" 
                      IsEnabled="{Binding CanSelectViewFiles}"
                      Command="{Binding SelectViewFilesCommand}"
+                     />
+
+                        <RadioButton Style="{StaticResource NavItemStyle}" 
+                     ToolTip="Settings" 
+                     IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=2}" 
+                     IsEnabled="{Binding CanSelectSettings}"
+                     Command="{Binding SelectSettingsCommand}"
                      />
 
                         <RadioButton Style="{StaticResource NavItemStyle}" 
@@ -126,6 +127,41 @@
                         </Grid>
                     </TabItem>
                     <TabItem>
+                        <Grid Margin="24">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="24"/>
+                                <RowDefinition Height="24"/>
+                                <RowDefinition Height="24"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="24"/>
+                                <RowDefinition Height="24"/>
+                                <RowDefinition Height="24"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock>Search expression:</TextBlock>
+                            <TextBox Grid.Row="1" Text="{Binding SearchExpression}" IsReadOnlyCaretVisible="True" IsReadOnly="True"/>
+                            <TextBlock Grid.Row="2" FontSize="8">Spaces act as delimiters for path and file names. Commas - to split expressions. Example: *.docx, some folder *24 *.xlsx</TextBlock>
+
+                            <DataGrid Grid.Row="3">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="File name" />
+                                    <DataGridTextColumn Header="File size" />
+                                    <DataGridTextColumn Header="Original path" />
+                                </DataGrid.Columns>
+                                
+                            </DataGrid>
+
+                            <StackPanel Orientation="Horizontal" Grid.Row="5">
+                                <TextBlock FontWeight="Bold">Total selected files:</TextBlock>
+                                <TextBlock Text="{Binding TotalFilesToArchive, Converter={StaticResource FileCountFormatter}}" Margin="8,0,0,0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Grid.Row="6">
+                                <TextBlock FontWeight="Bold">Total selected files size:</TextBlock>
+                                <TextBlock Text="{Binding TotalFileSizeToArchive, Converter={StaticResource FileSizeFormatter}}" Margin="8,0,0,0"/>
+                            </StackPanel>
+                        </Grid>                       
+                        
+                    </TabItem>
+                    <TabItem>
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*"/>
@@ -150,51 +186,12 @@
                                             <RowDefinition Height="24"/>
                                             <RowDefinition Height="24"/>
                                         </Grid.RowDefinitions>
-                                        <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock>Maximum files in one archive:</TextBlock>
-                                            <TextBox Width="50" Margin="8,0,0,0" Text="{Binding MaximumFiles}"/>
-                                        </StackPanel>
-                                        <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock>Maximum archive size, Mb:</TextBlock>
-                                            <TextBox Width="50" Margin="22,0,0,0" Text="{Binding MaximumArchiveSizeMb}"/>
-                                        </StackPanel>
-                                        <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                            <TextBlock>Source:</TextBlock>
-                                            <ComboBox Width="150" Margin="19,0,0,0" ItemsSource="{Binding SourceCloudConnectors}" SelectedItem="{Binding SelectedConnectorType, Mode=TwoWay}"/>
-                                        </StackPanel>
-                                        <GroupBox Grid.Row="3" Header="Source Settings">
-                                            <ItemsControl ItemsSource="{Binding ConnectorProperties}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Grid Margin="5">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="150"/>
-                                                                <ColumnDefinition Width="*"/>
-                                                            </Grid.ColumnDefinitions>
-                                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding Title}"/>
-                                                                <TextBlock Text=":"/>
-                                                            </StackPanel>
-
-                                                            <TextBox Grid.Column="1" Margin="16,0,0,0" Text="{Binding Value}" VerticalAlignment="Center" Visibility="{Binding IsText, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-
-                                                            <Grid Grid.Column="1" Margin="16,0,0,0" Visibility="{Binding IsFolder, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Stretch">
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="*"/>
-                                                                    <ColumnDefinition Width="30"/>
-                                                                </Grid.ColumnDefinitions>
-                                                                <TextBox Grid.Column="0" Text="{Binding Value}" VerticalAlignment="Center" IsReadOnly="True"/>
-                                                                <Button Grid.Column="1" Command="{Binding ChooseFolderCommand}">...</Button>
-                                                            </Grid>
-                                                        </Grid>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </GroupBox>
+                                        
                                         <StackPanel Grid.Row="4" Orientation="Horizontal" VerticalAlignment="Bottom">
-                                            <TextBlock>Destination:</TextBlock>
+                                            <TextBlock>Source:</TextBlock>
                                             <ComboBox Width="150" Margin="19,0,0,0" ItemsSource="{Binding CloudProviders}" SelectedIndex="{Binding SelectedProviderIndex}"/>
                                         </StackPanel>
+                                        
                                         <GroupBox Grid.Row="5" Header="Destination Settings">
                                             <ItemsControl ItemsSource="{Binding PluginProperties}">
                                                 <ItemsControl.ItemTemplate>
