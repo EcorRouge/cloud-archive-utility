@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace EcorRouge.Archive.Utility.ViewModels
@@ -17,12 +18,15 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private const int MAX_MEMORY_ENTRIES = 100000;
         private List<ManifestFileEntry> _entries;
 
+        private Regex[] _searchRegexs;
+
         public string SearchExpression
         {
             get => _searchExpression;
             set
             {
                 SetProperty(ref _searchExpression, value);
+                UpdateRegex();
                 UpdateSelectedFiles();
             }
         }
@@ -41,10 +45,47 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
         public ObservableCollection<ManifestFileEntry> SelectedFiles { get; } = new ObservableCollection<ManifestFileEntry>();
 
-        private static bool MatchesSearchExpression(string path, string searchExpression)
+        private Regex BuildRegex(string searchExpression)
         {
-            if (String.IsNullOrWhiteSpace(searchExpression) || String.IsNullOrWhiteSpace(path))
+            var escapeChars = new char[] { '"', '\\', '\'', '(', '[', '{', ')', ']', '}', '+', '?', '|', '.', '^', '$', '#' };
+
+            foreach (var ch in escapeChars)
+            {
+                searchExpression = searchExpression.Replace(ch + "", "\\" + ch);
+            }
+
+            searchExpression = searchExpression.Replace("*", ".*");
+            searchExpression = searchExpression.Replace(" ", "(\\s|\\\\|/)+");
+
+            return new Regex(searchExpression);
+        }
+
+        private void UpdateRegex()
+        {
+            if (String.IsNullOrWhiteSpace(_searchExpression))
+            {
+                _searchRegexs = null;
+                return;
+            }
+
+            var parts = _searchExpression.Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            _searchRegexs = new Regex[parts.Length];
+            for(int i = 0; i < parts.Length; i++)
+            {
+                _searchRegexs[i] = BuildRegex(parts[i]);
+            }
+        }
+
+        private bool MatchesSearchExpression(string path)
+        {
+            if (_searchRegexs == null || String.IsNullOrWhiteSpace(path))
                 return true;
+
+            foreach (var re in _searchRegexs)
+            {
+                if (re.IsMatch(path))
+                    return true;
+            }
 
             return false;
         }
@@ -87,7 +128,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 {
                     ManifestFileEntry entry;
                     while((entry = parser.GetNextEntry()) != null){
-                        if(MatchesSearchExpression(entry.OriginalPath, SearchExpression))
+                        if(MatchesSearchExpression(entry.OriginalPath))
                         {
                             SelectedFiles.Add(entry);
                             totalSize += entry.FileSize;
@@ -96,7 +137,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 }
             } else
             {
-                foreach (var entry in _entries.Where(x => MatchesSearchExpression(x.OriginalPath, SearchExpression))) 
+                foreach (var entry in _entries.Where(x => MatchesSearchExpression(x.OriginalPath))) 
                 {
                     SelectedFiles.Add(entry);
                     totalSize += entry.FileSize;

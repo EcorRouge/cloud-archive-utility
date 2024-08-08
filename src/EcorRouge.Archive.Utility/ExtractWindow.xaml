@@ -145,7 +145,7 @@
                                 <RowDefinition Height="24"/>
                             </Grid.RowDefinitions>
                             <TextBlock>Search expression:</TextBlock>
-                            <TextBox Grid.Row="1" Text="{Binding SearchExpression}" IsReadOnlyCaretVisible="True" IsReadOnly="True"/>
+                            <TextBox Grid.Row="1" Text="{Binding SearchExpression, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnlyCaretVisible="True"/>
                             <TextBlock Grid.Row="2" FontSize="8">Spaces act as delimiters for path and file names. Commas - to split expressions. Example: *.docx, some folder *24 *.xlsx</TextBlock>
 
                             <DataGrid Grid.Row="3" ItemsSource="{Binding SelectedFiles}" AutoGenerateColumns="False" CanUserResizeColumns="True">
