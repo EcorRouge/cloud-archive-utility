@@ -10,7 +10,7 @@ Set ObjOutFile = fso.CreateTextFile("export.csv")
 ObjOutFile.WriteLine("Collector|Drive|Name|Path|Size (bytes)|Modified Date|Classification|Type|Category|Age Bucket|Size Bucket|Original Path")
 
 'Call the GetFile function to get all files
-ListFolder "data"
+ListFolder "C:\Temp\data"
 
 'Close the output file
 ObjOutFile.Close

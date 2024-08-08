@@ -9,8 +9,15 @@
         xmlns:controls="clr-namespace:EcorRouge.Archive.Utility.Controls"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=designvm:ExtractWindowViewModelDesign, IsDesignTimeCreatable=True}"
-        Height="450" Width="800"
+        Height="600"
+        Width="800"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        Background ="Transparent"
+        AllowsTransparency="True"
+        MouseDown="ExtractWindow_OnMouseDown"
         WindowStartupLocation="CenterScreen"
+
         >
     <Window.Resources>
         <converters:TabIndexToBoolConverter x:Key="TabIndexToBoolConverter"/>
@@ -111,18 +118,18 @@
 
                             <StackPanel Orientation="Horizontal" Grid.Row="4">
                                 <TextBlock FontWeight="Bold">Total files in archive:</TextBlock>
-                                <TextBlock Text="{Binding TotalFilesToArchive, Converter={StaticResource FileCountFormatter}}" Margin="8,0,0,0"/>
+                                <TextBlock Text="{Binding TotalFilesInArchive, Converter={StaticResource FileCountFormatter}}" Margin="8,0,0,0"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Grid.Row="5">
                                 <TextBlock FontWeight="Bold">Total files size in archive:</TextBlock>
-                                <TextBlock Text="{Binding TotalFileSizeToArchive, Converter={StaticResource FileSizeFormatter}}" Margin="8,0,0,0"/>
+                                <TextBlock Text="{Binding TotalFileSizeInArchive, Converter={StaticResource FileSizeFormatter}}" Margin="8,0,0,0"/>
                             </StackPanel>
 
                             <Button Grid.Row="6" 
                   Style="{StaticResource ContinueButtonStyle}" 
                   VerticalAlignment="Center"
-                  Visibility="{Binding CanSelectSettings, Converter={StaticResource BooleanToVisibilityConverter}}"
-                  Command="{Binding SelectSettingsCommand}"
+                  Visibility="{Binding CanSelectViewFiles, Converter={StaticResource BooleanToVisibilityConverter}}"
+                  Command="{Binding SelectViewFilesCommand}"
                   >Continue ></Button>
                         </Grid>
                     </TabItem>
@@ -141,7 +148,7 @@
                             <TextBox Grid.Row="1" Text="{Binding SearchExpression}" IsReadOnlyCaretVisible="True" IsReadOnly="True"/>
                             <TextBlock Grid.Row="2" FontSize="8">Spaces act as delimiters for path and file names. Commas - to split expressions. Example: *.docx, some folder *24 *.xlsx</TextBlock>
 
-                            <DataGrid Grid.Row="3" ItemsSource="{Binding SelectedFiles}" CanUserResizeColumns="True">
+                            <DataGrid Grid.Row="3" ItemsSource="{Binding SelectedFiles}" AutoGenerateColumns="False" CanUserResizeColumns="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="File name" Binding="{Binding FileName}" Width="130"/>
                                     <DataGridTextColumn Header="File size" Binding="{Binding FileSize, Converter={StaticResource FileSizeFormatter}}"/>

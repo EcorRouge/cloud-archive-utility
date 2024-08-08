@@ -14,6 +14,9 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private long _totalSelectedFiles;
         private long _totalSelectedFilesSize;
 
+        private const int MAX_MEMORY_ENTRIES = 100000;
+        private List<ManifestFileEntry> _entries;
+
         public string SearchExpression
         {
             get => _searchExpression;
@@ -38,9 +41,75 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
         public ObservableCollection<ManifestFileEntry> SelectedFiles { get; } = new ObservableCollection<ManifestFileEntry>();
 
-        private void UpdateSelectedFiles()
+        private static bool MatchesSearchExpression(string path, string searchExpression)
         {
+            if (String.IsNullOrWhiteSpace(searchExpression) || String.IsNullOrWhiteSpace(path))
+                return true;
 
+            return false;
+        }
+
+        //_inputFile
+
+        private void LoadEntries()
+        {
+            _entries = new List<ManifestFileEntry>();
+
+            using (var parser = ManifestFileParser.OpenFile(_inputFile, null))
+            {
+                ManifestFileEntry entry;
+                while ((entry = parser.GetNextEntry()) != null)
+                {
+                    _entries.Add(entry);
+                }
+            }
+        }
+
+        public void UpdateSelectedFiles()
+        {
+            SelectedFiles.Clear();
+            TotalSelectedFiles = 0;
+            TotalSelectedFilesSize = 0;
+
+            long totalSize = 0;
+
+            if (_inputFile == null)
+                return;
+
+            if(_entries == null && _inputFile.TotalFiles < MAX_MEMORY_ENTRIES)
+            {
+                LoadEntries();
+            }
+
+            if(_entries == null)
+            {
+                using(var parser = ManifestFileParser.OpenFile(_inputFile, null))
+                {
+                    ManifestFileEntry entry;
+                    while((entry = parser.GetNextEntry()) != null){
+                        if(MatchesSearchExpression(entry.OriginalPath, SearchExpression))
+                        {
+                            SelectedFiles.Add(entry);
+                            totalSize += entry.FileSize;
+                        }
+                    }
+                }
+            } else
+            {
+                foreach (var entry in _entries.Where(x => MatchesSearchExpression(x.OriginalPath, SearchExpression))) 
+                {
+                    SelectedFiles.Add(entry);
+                    totalSize += entry.FileSize;
+                }
+            }
+
+            TotalSelectedFiles = SelectedFiles.Count;
+            TotalSelectedFilesSize = totalSize;
+        }
+
+        public void InitViewFiles()
+        {
+            
         }
     }
 }

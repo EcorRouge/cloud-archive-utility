@@ -23,7 +23,7 @@ End Function
 
 Sub GenerateFile(FileNo)
   Dim fileName
-  fileName = "data\" & CreateGuid() & ".txt"
+  fileName = "C:\Temp\data\" & CreateGuid() & ".txt"
 
   Set ObjOutFile = fso.CreateTextFile(fileName)
   

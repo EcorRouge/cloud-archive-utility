@@ -123,6 +123,19 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 }
             });
 
+            SelectViewFilesCommand = new RelayCommand(() =>
+            {
+                if (_worker?.IsBusy ?? false)
+                {
+                    ConfirmInterrupt(() => { SelectedPageIndex = TAB_VIEW_FILES; });
+                }
+                else
+                {
+                    SelectedPageIndex = TAB_VIEW_FILES;
+                    UpdateSelectedFiles();
+                }
+            });
+
             SelectSettingsCommand = new RelayCommand(() =>
             {
                 if (_worker?.IsBusy ?? false)
@@ -175,8 +188,9 @@ namespace EcorRouge.Archive.Utility.ViewModels
             ConfigureRuntimeProperties();
 
             InitFilePage();
-            //InitSettingsPage();
-            //InitProgressPage();
+            InitViewFiles();
+            InitSettingsPage();
+            InitProgressPage();
         }
 
         private void ClearState()
