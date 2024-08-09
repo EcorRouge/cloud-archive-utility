@@ -1,6 +1,8 @@
 ﻿using EcorRouge.Archive.Utility.Plugins;
 using EcorRouge.Archive.Utility.Settings;
 using Microsoft.Toolkit.Mvvm.Input;
+using Newtonsoft.Json.Linq;
+using Ookii.Dialogs.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,16 +20,25 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private bool _canStart;
         private int _selectedProviderIndex;
         private string _keypairFileName;
+        private bool _isEncrypted;
+        private string _destinationFolder;
 
         public ObservableCollection<string> CloudProviders { get; } = new ObservableCollection<string>();
 
         public RelayCommand StartCommand { get; set; }
         public RelayCommand ChooseKeypairFileCommand { get; set; }
+        public RelayCommand ChooseDestinationFolderCommand { get; set; }
 
         public bool CanStart
         {
             get => _canStart;
             set => SetProperty(ref _canStart, value);
+        }
+
+        public bool IsEncrypted
+        {
+            get => _isEncrypted;
+            set => SetProperty(ref _isEncrypted, value);
         }
 
         public PropertyModel[] PluginProperties => _pluginProperties;
@@ -43,6 +54,12 @@ namespace EcorRouge.Archive.Utility.ViewModels
             }
         }
 
+        public string DestinationFolder
+        {
+            get => _destinationFolder;
+            set => SetProperty(ref _destinationFolder, value);
+        }
+
         public string KeypairFileName
         {
             get => _keypairFileName;
@@ -52,7 +69,9 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private void InitSettingsPage()
         {
             StartCommand = new RelayCommand(StartExtracting);
+
             ChooseKeypairFileCommand = new RelayCommand(ChooseKeypair);
+            ChooseDestinationFolderCommand = new RelayCommand(ChooseDestinationFolder);
 
             SelectedProviderIndex = SettingsFile.Instance.ProviderIndex;
             KeypairFileName = SettingsFile.Instance.KeypairFileName;
@@ -117,11 +136,11 @@ namespace EcorRouge.Archive.Utility.ViewModels
             var plugin = PluginsManager.Instance.GetPlugin(SelectedProviderIndex);
             if (plugin == null) return false;
 
-            //bool encryptPropsOk = !_encryptFiles || !String.IsNullOrWhiteSpace(_keypairFileName);
+            bool encryptPropsOk = !_isEncrypted || !String.IsNullOrWhiteSpace(_keypairFileName);
 
             bool pluginPropsOk = plugin.VerifyProperties(GetProperties(_pluginProperties));
 
-            return pluginPropsOk; // && encryptPropsOk;            
+            return pluginPropsOk && encryptPropsOk && !String.IsNullOrWhiteSpace(_destinationFolder);
         }
 
         private static void AddPropertiesToSettings(string settingProvider, Dictionary<string, object> props)
@@ -132,7 +151,21 @@ namespace EcorRouge.Archive.Utility.ViewModels
             }
         }
 
-        public void ChooseKeypair()
+        private void ChooseDestinationFolder()
+        {
+            var dialog = new VistaFolderBrowserDialog();
+            dialog.Description = "Please choose destination folder.";
+            dialog.UseDescriptionForTitle = true;
+
+            if (dialog.ShowDialog() ?? false)
+            {
+                DestinationFolder = dialog.SelectedPath;
+            }
+
+            CanStart = CheckCanStart();
+        }
+
+        private void ChooseKeypair()
         {
             var ofd = new OpenFileDialog();
             ofd.Filter = "Key files|*.key";

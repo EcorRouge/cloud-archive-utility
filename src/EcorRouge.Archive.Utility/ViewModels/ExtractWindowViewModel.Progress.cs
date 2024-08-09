@@ -14,6 +14,18 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private ExtractSavedState _savedState;
         private ExtractWorker _worker;
 
+        private string _extractingLabel;
+        private string _downloadingLabel;
+        private string _totalLabel;
+        private string _currentFileLabel;
+
+        private bool _downloadingVisible;
+
+        private double _extractProgress = 0;
+        private double _downloadProgress = 0;
+        private double _totalProgress = 0;
+
+
         public RelayCommand CancelProgressCommand { get; set; }
 
         public bool CanCancelProcess

@@ -146,6 +146,9 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
             TotalSelectedFiles = SelectedFiles.Count;
             TotalSelectedFilesSize = totalSize;
+
+            IsEncrypted = SelectedFiles.Any(x => x.ZipFileName.EndsWith(".zip.enc"));
+            CanSelectSettings = TotalSelectedFiles > 0;
         }
 
         public void InitViewFiles()
