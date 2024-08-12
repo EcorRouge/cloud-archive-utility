@@ -102,5 +102,40 @@ namespace EcorRouge.Archive.Utility.Plugins.Local
                 }
             }, cancellationToken);
         }
+
+
+        public override Task DownloadFileAsync(string fileName, string destFileName, CancellationToken cancellationToken = default)
+        {
+            return Task.Run(async () =>
+            {
+                var fInfo = new FileInfo(Path.Combine(_localFolder, fileName));
+                var buf = new byte[1024 * 1024 * 10];
+
+                var drive = new DriveInfo(destFileName.Substring(0, 1));
+                if (drive.AvailableFreeSpace < fInfo.Length)
+                {
+                    throw new IOException($"Insufficient drive space on {drive.Name}");
+                }
+
+                var inputFileName = Path.Combine(_localFolder, Path.GetFileName(fileName));
+
+                await using var reader = new FileStream(inputFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                await using var writer = new FileStream(destFileName, FileMode.Create, FileAccess.Write, FileShare.None);
+
+                long totalBytes = 0;
+                while (reader.CanRead)
+                {
+                    var len = await reader.ReadAsync(buf, 0, buf.Length, cancellationToken);
+                    if (len <= 0)
+                        break;
+
+                    await writer.WriteAsync(buf, 0, len, cancellationToken);
+
+                    totalBytes += len;
+
+                    DownloadProgress(totalBytes, totalBytes * 100.0 / fInfo.Length);
+                }
+            }, cancellationToken);
+        }
     }
 }

@@ -34,6 +34,8 @@ namespace EcorRouge.Archive.Utility.Plugins
         public abstract Task CloseSessionAsync(CancellationToken cancellationToken = default);
         public abstract Task UploadFileAsync(string fileName, CancellationToken cancellationToken = default);
 
+        public abstract Task DownloadFileAsync(string fileName, string destFileName CancellationToken cancellationToken = default);
+
         protected void UploadProgress(long bytesUploaded, double percentUploaded)
         {
             OnUploadProgress?.Invoke(bytesUploaded, percentUploaded);

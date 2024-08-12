@@ -28,6 +28,10 @@ namespace EcorRouge.Archive.Utility.Settings
         
         public string KeypairFilename { get; set; }
 
+        public bool IsEncrypted { get; set; }
+        public string CurrentZipFileName { get; set; }        
+        public string CurrentEntryFileName { get; set; }
+
         public void SetPluginProperties(Dictionary<string, object> pluginProperties) => SetProperties(ref _pluginProperties, pluginProperties);
 
         public Dictionary<string, object> GetPluginProperties() => GetProperties(PluginProperties);

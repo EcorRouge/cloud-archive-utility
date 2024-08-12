@@ -135,6 +135,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             _savedState.KeypairFilename = _keypairFileName;
             _savedState.SearchExpression = _searchExpression;
             _savedState.InputFilename = _fileName;
+            _savedState.IsEncrypted = IsEncrypted;
             _savedState.DestinationFolder = _destinationFolder;
 
             _savedState.Save();

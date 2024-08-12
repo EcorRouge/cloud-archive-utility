@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.S3;
+using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 
 namespace EcorRouge.Archive.Utility.Plugins.S3
@@ -153,6 +154,33 @@ namespace EcorRouge.Archive.Utility.Plugins.S3
             await fileTransferUtility.UploadAsync(fileTransferUtilityRequest, cancellationToken);
 
             File.Delete(fileName);
+        }
+
+        public override async Task DownloadFileAsync(string fileName, string destinationFileName, CancellationToken cancellationToken = default)
+        {
+            var keyPath = (String.IsNullOrWhiteSpace(_prefix) ? "" : _prefix) + Path.GetFileName(fileName);
+
+            var fileTransferUtility = new TransferUtility(_client);
+
+            LogDebug($"Uploading {fileName} to {keyPath}...");
+
+            var fileTransferUtilityRequest = new TransferUtilityDownloadRequest
+            {
+                BucketName = _bucket,                
+                Key = keyPath,
+                FilePath = destinationFileName,
+            };
+
+            fileTransferUtilityRequest.WriteObjectProgressEvent += FileTransferUtilityRequest_DownloadProgressEvent;
+
+            await fileTransferUtility.DownloadAsync(fileTransferUtilityRequest, cancellationToken);
+
+            File.Delete(fileName);
+        }
+
+        private void FileTransferUtilityRequest_DownloadProgressEvent(object sender, WriteObjectProgressArgs e)
+        {
+            DownloadProgress(e.TransferredBytes, e.PercentDone);
         }
 
         private void FileTransferUtilityRequest_UploadProgressEvent(object sender, UploadProgressArgs e)
