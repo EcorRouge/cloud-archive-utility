@@ -9,7 +9,9 @@ namespace EcorRouge.Archive.Utility.ViewModels.Design
     public class ExtractWindowViewModelDesign : ExtractWindowViewModel
     {
         public ExtractWindowViewModelDesign() {
-            SelectedPageIndex = TAB_SELECT_FILE;
+            SelectedPageIndex = TAB_PROGRESS;
+
+            ExtractingLabel = "Downloading zip file";
         }
     }
 }

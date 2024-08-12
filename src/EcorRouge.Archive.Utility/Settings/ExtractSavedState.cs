@@ -14,14 +14,18 @@ namespace EcorRouge.Archive.Utility.Settings
 
         [JsonIgnore]
         public bool IsEmpty { get; set; }
-        public int SelectedMode { get; set; }
-        public string ManifestFileName { get; set; }
+
+        public string InputFilename { get; set; }
+        public string SearchExpression { get; set; }        
+        public string DestinationFolder { get; set; }
+
         public string PluginType { get; set; }
         public string PluginProperties
         {
             get => _pluginProperties;
             set => _pluginProperties = value;
         }
+        
         public string KeypairFilename { get; set; }
 
         public void SetPluginProperties(Dictionary<string, object> pluginProperties) => SetProperties(ref _pluginProperties, pluginProperties);

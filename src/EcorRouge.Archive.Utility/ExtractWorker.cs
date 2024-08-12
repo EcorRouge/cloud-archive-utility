@@ -1,4 +1,5 @@
 ﻿using EcorRouge.Archive.Utility.Settings;
+using EcorRouge.Archive.Utility.Util;
 using log4net;
 using System;
 using System.Collections.Generic;
@@ -36,6 +37,7 @@ namespace EcorRouge.Archive.Utility
 
         public bool IsCanceled { get; private set; }
         public bool IsBusy { get; private set; }
+        public List<ManifestFileEntry> SelectedFiles { get; private set; }
 
         public ExtractState State { get; private set; }
 
@@ -44,7 +46,7 @@ namespace EcorRouge.Archive.Utility
             _cts?.Cancel();
         }
 
-        public void Start()
+        public void Start(List<ManifestFileEntry> selectedFiles)
         {
             IsCanceled = false;
 
