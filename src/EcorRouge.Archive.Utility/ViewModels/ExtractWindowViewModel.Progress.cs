@@ -131,7 +131,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             TotalLabel = "Initializing";
             CurrentFileLabel = string.Empty;
 
-            //_savedState.PluginType = plugin?.ProviderName;
+            _savedState.PluginType = plugin?.ProviderName;
             _savedState.KeypairFilename = _keypairFileName;
             _savedState.SearchExpression = _searchExpression;
             _savedState.InputFilename = _fileName;
@@ -139,18 +139,34 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
             _savedState.Save();
 
-            /*_worker = new ExtractWorker(plugin, _savedState, _inputFile);
+            _worker = new ExtractWorker(plugin, _savedState, _inputFile);
 
             _worker.StateChanged += ExtractWorker_StateChanged;
             _worker.Completed += ExtractWorker_Completed;
-            _worker.ArchivingProgress += ArchiveWorker_ArchivingProgress;
-            _worker.DeletingProgress += ArchiveWorker_DeletingProgress;
-            _worker.UploadingProgress += ArchiveWorker_UploadingProgress;
-            _worker.ArchivingNewFile += ArchiveWorker_ArchivingNewFile;
+            _worker.ExtractingProgress += ExtractWorker_ExtractingProgress;
+            _worker.DownloadingProgress += ExtractWorker_DownloadingProgress;
 
-            _worker.Start(SelectedFiles);*/
+            _worker.Start(SelectedFiles.ToList());
         }
 
+        private void ExtractWorker_DownloadingProgress(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
 
+        private void ExtractWorker_ExtractingProgress(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ExtractWorker_Completed(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ExtractWorker_StateChanged(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
