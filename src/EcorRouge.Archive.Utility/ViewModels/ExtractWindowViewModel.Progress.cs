@@ -179,12 +179,47 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
         private void ExtractWorker_ExtractingProgress(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            if(_worker.State == ExtractState.Extracting)
+            {
+                ExtractProgress = _worker.ExtractProgress;
+
+                ExtractingLabel = $"Extracting archive: {ExtractProgress:N1}% ({FileSizeFormatter.Format(_worker.BytesExtracted)})";
+            } 
+            else if (_worker.State == ExtractState.Decrypting)
+            {
+                ExtractProgress = _worker.BytesDecrypted * 100.0 / _worker.ZipFileSize;
+                ExtractingLabel = $"Decrypting archive: {ExtractProgress:N1}% ({FileSizeFormatter.Format(_worker.BytesDecrypted)})";
+            }
+
+            FormatTotalLabel();
         }
 
         private void ExtractWorker_Completed(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            _worker.StateChanged -= ExtractWorker_StateChanged;
+            _worker.Completed -= ExtractWorker_Completed;
+            _worker.ExtractingProgress -= ExtractWorker_ExtractingProgress;
+            _worker.DownloadingProgress -= ExtractWorker_DownloadingProgress;
+            _worker.ExtractingNewFile -= ExtractWorker_ExtractingNewFile;
+
+            if (_worker.State == ExtractState.ErrorStarting)
+                return;
+
+            CanSelectSettings = false;
+            CanSelectProgress = false;
+            CanSelectFinish = true;
+
+            TotalCompletedFilesLabel = $"Total files processed: {_worker.FilesProcessed}, errors: {_worker.FilesFailed}";
+            TotalCompletedBytesLabel = $"Total bytes processed: {FileSizeFormatter.Format(_worker.BytesProcessed)}";
+
+            if (_worker.IsCanceled)
+            {
+                SelectedPageIndex = TAB_SELECT_FILE;
+            }
+            else
+            {
+                SelectedPageIndex = TAB_FINISH;
+            }
         }
 
         private void ExtractWorker_StateChanged(object sender, EventArgs e)

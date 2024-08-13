@@ -47,16 +47,16 @@ namespace EcorRouge.Archive.Utility
         private long _bytesProcessed = 0;
         private long _filesFailed = 0;
 
-        private long _totalArchiveSize = 0;
         private long _zipFileSize = 0;
         private long _bytesDownloaded = 0;
         private double _downloadProgress = 0;
         private long _bytesDecrypted = 0;
         private double _decryptProgress = 0;
+        private long _bytesExtracted = 0;
+        private double _extractProgress = 0;
 
         private string _manifestFileName;
-        private RSA _rsa;
-        private Aes _aesAlg;
+        private RSA _rsa;        
         private string _zipFileName;
         
         private ManifestFile _inputFile;
@@ -73,15 +73,16 @@ namespace EcorRouge.Archive.Utility
 
         public List<ManifestFileEntry> SelectedFiles { get; private set; }
 
-        public long FilesInArchive => _filesInArchive;
         public long FilesFailed => _filesFailed;
-        public long FilesSizeInArchive => _filesSizeInArchive;
-        public long TotalArchiveSize => _totalArchiveSize;
         public long ArchiveSize => _zipFileSize;
         public long FilesProcessed => _filesProcessed;
         public long BytesProcessed => _bytesProcessed;
         public long BytesDownloaded => _bytesDownloaded;
         public double DownloadProgress => _downloadProgress;
+        public long BytesDecrypted => _bytesDecrypted;
+        public long ZipFileSize => _zipFileSize;
+        public double ExtractProgress => _extractProgress;
+        public long BytesExtracted => _bytesExtracted;
 
         public ExtractState State { get; private set; }
         public int SecondsBeforeRetry { get; set; }
@@ -286,6 +287,11 @@ namespace EcorRouge.Archive.Utility
             aesAlg.KeySize = 256;
             var buf = new byte[4096];
 
+            var fInfo = new FileInfo(oldFileName);
+
+            _bytesDecrypted = 0;
+            _zipFileSize = fInfo.Length;
+
             using (var inputStream = new FileStream(oldFilePath, FileMode.Open, FileAccess.Read))
             {
                 if(!ReadEncryptedFileHeader(inputStream, aesAlg))
@@ -304,6 +310,10 @@ namespace EcorRouge.Archive.Utility
                             break;
 
                         writer.Write(buf, 0, bytesRead);
+
+                        _bytesDecrypted += bytesRead;
+
+                        ExtractingProgress?.Invoke(this, null);
                     }
                 }
             }
@@ -400,6 +410,8 @@ namespace EcorRouge.Archive.Utility
                         {
                             _zipFile = ZipFile.Read(Path.Combine(PathHelper.GetTempPath(), _zipFileName));
                         }
+
+                        _zipFile.ExtractProgress += _zipFile_ExtractProgress;
                     } catch (Exception ex)
                     {
                         log.Error($"Error reading zip file: {entry.ZipFileName}: {ex.Message}", ex);
@@ -416,7 +428,9 @@ namespace EcorRouge.Archive.Utility
                     try
                     {
                         ChangeState(ExtractState.Extracting);
-                        zipEntry.Extract(PathHelper.GetTempPath(), ExtractExistingFileAction.OverwriteSilently); //TODO: progress
+                        _bytesExtracted = 0;                        
+
+                        zipEntry.Extract(PathHelper.GetTempPath(), ExtractExistingFileAction.OverwriteSilently);
                     } catch (Exception ex)
                     {
                         log.Error($"Error extracting {entry.GeneratedFileName} from {entry.ZipFileName}", ex);
@@ -436,11 +450,20 @@ namespace EcorRouge.Archive.Utility
                 }
 
                 _filesProcessed++;
+                _bytesProcessed += entry.FileSize;
 
                 ExtractingProgress?.Invoke(this, EventArgs.Empty);
             }
 
             ExtractSavedState.Clear();
+        }
+
+        private void _zipFile_ExtractProgress(object sender, ExtractProgressEventArgs e)
+        {
+            _extractProgress = e.BytesTransferred * 100.0 / e.TotalBytesToTransfer;
+            _bytesExtracted = e.BytesTransferred;
+
+            ExtractingProgress?.Invoke(this, null);
         }
     }
 }
