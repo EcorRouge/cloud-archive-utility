@@ -131,6 +131,15 @@ namespace EcorRouge.Archive.Utility.ViewModels
             TotalLabel = "Initializing";
             CurrentFileLabel = string.Empty;
 
+            var plugin = PluginsManager.Instance.Plugins[SelectedProviderIndex];
+            var pluginProperties = GetProperties(_pluginProperties);
+            AddPropertiesToSettings(plugin.ProviderName, pluginProperties);
+
+            if (_savedState.IsEmpty)
+            {
+                _savedState.SetPluginProperties(pluginProperties);
+            }
+
             _savedState.PluginType = plugin?.ProviderName;
             _savedState.KeypairFilename = _keypairFileName;
             _savedState.SearchExpression = _searchExpression;

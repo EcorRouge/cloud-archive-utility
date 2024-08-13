@@ -563,7 +563,7 @@ namespace EcorRouge.Archive.Utility
             if (_savedState.EncryptFiles)
             {
                 _aesAlg = Aes.Create();
-                _aesAlg.KeySize = 256;                
+                _aesAlg.KeySize = 256;
                 _aesAlg.GenerateIV();
                 _aesAlg.GenerateKey();
 

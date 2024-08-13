@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using static System.Windows.Forms.AxHost;
 
 namespace EcorRouge.Archive.Utility
@@ -30,6 +31,8 @@ namespace EcorRouge.Archive.Utility
     {
         internal static readonly ILog log = LogManager.GetLogger(typeof(ExtractWorker));
 
+        private const int MAX_WAIT_TIME = 60;
+
         private CancellationTokenSource _cts;
         private ExtractSavedState _savedState;
 
@@ -48,6 +51,8 @@ namespace EcorRouge.Archive.Utility
         private long _zipFileSize = 0;
         private long _bytesDownloaded = 0;
         private double _downloadProgress = 0;
+        private long _bytesDecrypted = 0;
+        private double _decryptProgress = 0;
 
         private string _manifestFileName;
         private RSA _rsa;
@@ -78,7 +83,7 @@ namespace EcorRouge.Archive.Utility
             this._inputFile = inputFile;
             _savedState = savedState;
             _pluginProperties = _savedState.GetPluginProperties();
-            _destinationFolder = _savedState.DestinationFolder
+            _destinationFolder = _savedState.DestinationFolder;
 
             if (_plugin != null)
             {
@@ -208,6 +213,95 @@ namespace EcorRouge.Archive.Utility
             }
         }
 
+        private bool ReadEncryptedFileHeader(FileStream inputStream, Aes aes)
+        {
+            var buf = new byte[4096];
+
+            var marker = "ERAU";
+
+            if(inputStream.Read(buf, 0, marker.Length) < marker.Length)
+            {
+                log.Warn("Missing file header");
+                return false;
+            }
+
+            if(!marker.Equals(Encoding.ASCII.GetString(buf, 0, marker.Length)))
+            {
+                log.Warn("File signature doesn't match");
+                return false;
+            }
+
+            if(inputStream.Read(buf, 0, 4) < 4)
+            {
+                log.Warn("Missing iv length!");
+            }
+
+            var ivLength = BitConverter.ToInt32(buf, 0);
+            var iv = new byte[ivLength];
+
+            if(inputStream.Read(iv, 0, ivLength) < ivLength)
+            {
+                log.Warn("Failed to read IV!");
+            }
+
+            if (inputStream.Read(buf, 0, 4) < 4)
+            {
+                log.Warn("Missing key length!");
+            }
+
+            var keyLength = BitConverter.ToInt32(buf, 0);
+            var key = new byte[keyLength];
+
+            if (inputStream.Read(key, 0, keyLength) < keyLength)
+            {
+                log.Warn("Failed to read key!");
+            }
+
+            var ivDecrypted = _rsa.Decrypt(iv, RSAEncryptionPadding.Pkcs1);
+            var keyDecrypted = _rsa.Decrypt(key, RSAEncryptionPadding.Pkcs1);
+
+            aes.IV = ivDecrypted;
+            aes.Key = keyDecrypted;
+
+            return true;
+        }
+
+        private void DecryptArchive(string oldFileName, string newFileName, CancellationToken cancellationToken = default)
+        {
+            ChangeState(ExtractState.Decrypting);
+
+            var oldFilePath = Path.Combine(PathHelper.GetTempPath(), oldFileName);
+            var newFilePath = Path.Combine(PathHelper.GetTempPath(), newFileName);
+
+            var aesAlg = Aes.Create();
+            aesAlg.KeySize = 256;
+            var buf = new byte[4096];
+
+            using (var inputStream = new FileStream(oldFilePath, FileMode.Open, FileAccess.Read))
+            {
+                if(!ReadEncryptedFileHeader(inputStream, aesAlg))
+                {
+                    throw new ArgumentException("Malformed encrypted file header");
+                }
+
+                using(var decryptor = aesAlg.CreateDecryptor())
+                using(var cryptoStream = new CryptoStream(inputStream, decryptor, CryptoStreamMode.Read, true))
+                using(var writer = new FileStream(newFilePath, FileMode.Create, FileAccess.Write))
+                {
+                    int bytesRead;
+                    while((bytesRead = cryptoStream.Read(buf, 0, buf.Length)) > 0)
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                            break;
+
+                        writer.Write(buf, 0, bytesRead);
+                    }
+                }
+            }
+
+            File.Delete(oldFilePath);
+        }
+
         private async Task DoWork(CancellationToken cancellationToken)
         {
             IsBusy = true;
@@ -257,31 +351,51 @@ namespace EcorRouge.Archive.Utility
 
             foreach (var entry in entries)
             {
-                if (_cts.IsCancellationRequested)
+                if (cancellationToken.IsCancellationRequested)
                     break;
 
                 if(_zipFile == null || !String.Equals(entry.ZipFileName, _zipFileName))
                 {
+                    _zipFile?.Dispose();
+                    _zipFile = null;
+
                     _zipFileName = entry.ZipFileName;
 
                     log.Debug($"Downloading {entry.ZipFileName}");
 
                     await DownloadArchiveWithRetries(_zipFileName, cancellationToken);
 
-                    if(entry.ZipFileName.EndsWith(".zip.enc"))
+                    try
                     {
-                        string newZipFileName = Path.GetFileNameWithoutExtension(entry.ZipFileName); //Cut .enc
+                        if (entry.ZipFileName.EndsWith(".zip.enc"))
+                        {
+                            string newZipFileName = Path.GetFileNameWithoutExtension(entry.ZipFileName); //Cut .enc
 
-                        await DecryptArchive(_entry.ZipFileName, newZipFileName, cancellationToken);
+                            try
+                            {
+                                DecryptArchive(entry.ZipFileName, newZipFileName, cancellationToken);
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error($"Error decrypting archive {entry.ZipFileName}: {ex.Message}", ex);
+                            }
 
-                        _zipFile = ZipFile.Read(Path.Combine(PathHelper.GetTempPath(), newZipFileName));
-                    } else
+                            if (cancellationToken.IsCancellationRequested)
+                                break;
+
+                            _zipFile = ZipFile.Read(Path.Combine(PathHelper.GetTempPath(), newZipFileName));
+                        }
+                        else
+                        {
+                            _zipFile = ZipFile.Read(Path.Combine(PathHelper.GetTempPath(), _zipFileName));
+                        }
+                    } catch (Exception ex)
                     {
-                        _zipFile = ZipFile.Read(Path.Combine(PathHelper.GetTempPath(), zipFileName));
-                    }                    
+                        log.Error($"Error reading zip file: {entry.ZipFileName}: {ex.Message}", ex);
+                    }
                 }
 
-                var zipEntry = _zipFile.Entries.FirstOrDefault(x => x.FileName.Equals(entry.GeneratedFileName);
+                var zipEntry = _zipFile?.Entries.FirstOrDefault(x => x.FileName.Equals(entry.GeneratedFileName));
 
                 if(zipEntry == null) 
                 {
