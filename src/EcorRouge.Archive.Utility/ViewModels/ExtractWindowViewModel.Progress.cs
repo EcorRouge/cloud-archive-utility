@@ -1,4 +1,6 @@
-﻿using EcorRouge.Archive.Utility.Settings;
+﻿using EcorRouge.Archive.Utility.Converters;
+using EcorRouge.Archive.Utility.Settings;
+using EcorRouge.Archive.Utility.Util;
 using Microsoft.Toolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
@@ -155,13 +157,24 @@ namespace EcorRouge.Archive.Utility.ViewModels
             _worker.Completed += ExtractWorker_Completed;
             _worker.ExtractingProgress += ExtractWorker_ExtractingProgress;
             _worker.DownloadingProgress += ExtractWorker_DownloadingProgress;
+            _worker.ExtractingNewFile += ExtractWorker_ExtractingNewFile;
 
             _worker.Start(SelectedFiles.ToList());
         }
 
         private void ExtractWorker_DownloadingProgress(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            if (_worker.State == ExtractState.DownloadWaiting)
+            {
+                DownloadingLabel = $"Downloading archive: {_worker.SecondsBeforeRetry} seconds left before next attempt...";
+            }
+            else
+            {
+                DownloadProgress = _worker.DownloadProgress;
+                DownloadingLabel = $"Downloading archive: {DownloadProgress:N1}% ({FileSizeFormatter.Format(_worker.BytesDownloaded)})";
+
+                FormatTotalLabel();
+            }
         }
 
         private void ExtractWorker_ExtractingProgress(object sender, EventArgs e)
@@ -176,7 +189,49 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
         private void ExtractWorker_StateChanged(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            switch (_worker.State)
+            {
+                case ExtractState.Initializing:
+                    DownloadingLabel = "Initializing...";
+                    DownloadingVisible = false;
+                    break;
+                case ExtractState.ErrorStarting:
+                    CanSelectSettings = true;
+                    CanSelectProgress = false;
+                    SelectedPageIndex = TAB_SETTINGS;
+
+                    DisplayOkDialog("Error", "Error testing cloud provider credentials!", () => { });
+                    break;
+                case ExtractState.Downloading:
+                    DownloadProgress = 0;
+                    DownloadingLabel = "Downloading...";
+                    DownloadingVisible = true;
+                    break;
+                case ExtractState.Decrypting:
+                    DownloadProgress = 0;
+                    DownloadingLabel = "Decrypting...";
+                    DownloadingVisible = true;
+                    break;
+                case ExtractState.Extracting:
+                    DownloadProgress = 0;
+                    DownloadingLabel = "Extracting...";
+                    DownloadingVisible = true;
+                    break;
+                case ExtractState.Completed:
+                    break;
+            }
+        }
+
+        private void ExtractWorker_ExtractingNewFile(ManifestFileEntry fileToExtract)
+        {
+            CurrentFileLabel = $"{fileToExtract.FileName} ({FileSizeFormatter.Format(fileToExtract.FileSize)})";
+        }
+
+        private void FormatTotalLabel()
+        {
+            TotalProgress = _worker.FilesProcessed * 100.0 / _totalSelectedFiles;
+
+            TotalLabel = $"Total progress: {TotalProgress:N1}%, {FileSizeFormatter.Format(_worker.BytesProcessed)}, {_worker.FilesFailed} errors.";
         }
     }
 }

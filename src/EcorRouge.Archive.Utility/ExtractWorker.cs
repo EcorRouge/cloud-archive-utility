@@ -57,8 +57,6 @@ namespace EcorRouge.Archive.Utility
         private string _manifestFileName;
         private RSA _rsa;
         private Aes _aesAlg;
-        private ICryptoTransform _decryptor;
-        private CryptoStream _cryptoStream;
         private string _zipFileName;
         
         private ManifestFile _inputFile;
@@ -68,14 +66,25 @@ namespace EcorRouge.Archive.Utility
         public event EventHandler ExtractingProgress;
         public event EventHandler DownloadingProgress;
         public event EventHandler StateChanged;
+        public event Action<ManifestFileEntry> ExtractingNewFile;
 
         public bool IsCanceled { get; private set; }
         public bool IsBusy { get; private set; }
+
         public List<ManifestFileEntry> SelectedFiles { get; private set; }
+
+        public long FilesInArchive => _filesInArchive;
+        public long FilesFailed => _filesFailed;
+        public long FilesSizeInArchive => _filesSizeInArchive;
+        public long TotalArchiveSize => _totalArchiveSize;
+        public long ArchiveSize => _zipFileSize;
+        public long FilesProcessed => _filesProcessed;
+        public long BytesProcessed => _bytesProcessed;
+        public long BytesDownloaded => _bytesDownloaded;
+        public double DownloadProgress => _downloadProgress;
 
         public ExtractState State { get; private set; }
         public int SecondsBeforeRetry { get; set; }
-
 
         public ExtractWorker(PluginBase plugin, ExtractSavedState savedState, ManifestFile inputFile)
         {
@@ -354,7 +363,9 @@ namespace EcorRouge.Archive.Utility
                 if (cancellationToken.IsCancellationRequested)
                     break;
 
-                if(_zipFile == null || !String.Equals(entry.ZipFileName, _zipFileName))
+                ExtractingNewFile?.Invoke(entry);
+
+                if (_zipFile == null || !String.Equals(entry.ZipFileName, _zipFileName))
                 {
                     _zipFile?.Dispose();
                     _zipFile = null;
