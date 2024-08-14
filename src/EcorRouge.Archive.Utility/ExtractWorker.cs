@@ -138,6 +138,8 @@ namespace EcorRouge.Archive.Utility
         {
             IsCanceled = false;
 
+            SelectedFiles = selectedFiles;
+
             _cts = new CancellationTokenSource();
 
             Task.Run(async () =>
@@ -241,7 +243,21 @@ namespace EcorRouge.Archive.Utility
                 return false;
             }
 
-            if(inputStream.Read(buf, 0, 4) < 4)
+            if (inputStream.Read(buf, 0, 4) < 4)
+            {
+                log.Warn("Missing version!");
+            }
+
+            var algVersion = BitConverter.ToInt32(buf, 0);
+
+            if (inputStream.Read(buf, 0, 4) < 4)
+            {
+                log.Warn("Missing aes key size!");
+            }
+
+            aes.KeySize = BitConverter.ToInt32(buf, 0);
+
+            if (inputStream.Read(buf, 0, 4) < 4)
             {
                 log.Warn("Missing iv length!");
             }
@@ -284,10 +300,9 @@ namespace EcorRouge.Archive.Utility
             var newFilePath = Path.Combine(PathHelper.GetTempPath(), newFileName);
 
             var aesAlg = Aes.Create();
-            aesAlg.KeySize = 256;
             var buf = new byte[4096];
 
-            var fInfo = new FileInfo(oldFileName);
+            var fInfo = new FileInfo(oldFilePath);
 
             _bytesDecrypted = 0;
             _zipFileSize = fInfo.Length;
@@ -331,7 +346,7 @@ namespace EcorRouge.Archive.Utility
             {
                 try
                 {
-                    _rsa = ArchiverWorker.ImportKeypair(_savedState.KeypairFilename);
+                    _rsa = ArchiverWorker.ImportKeypair(_savedState.KeypairFilename, false, true);
                 }
                 catch (Exception ex)
                 {
@@ -359,103 +374,129 @@ namespace EcorRouge.Archive.Utility
                 }
             }
 
-            var entries = SelectedFiles.OrderBy(x => x.ZipFileName);
-
-            _zipFileName = null;
-
-            if (_plugin?.KeepSession ?? false)
+            try
             {
-                await _plugin.OpenSessionAsync(_pluginProperties, cancellationToken);
-            }
 
-            foreach (var entry in entries)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                    break;
+                var entries = SelectedFiles.OrderBy(x => x.ZipFileName);
 
-                ExtractingNewFile?.Invoke(entry);
+                _zipFileName = null;
 
-                if (_zipFile == null || !String.Equals(entry.ZipFileName, _zipFileName))
+                if (_plugin?.KeepSession ?? false)
                 {
-                    _zipFile?.Dispose();
-                    _zipFile = null;
-
-                    _zipFileName = entry.ZipFileName;
-
-                    log.Debug($"Downloading {entry.ZipFileName}");
-
-                    await DownloadArchiveWithRetries(_zipFileName, cancellationToken);
-
-                    try
-                    {
-                        if (entry.ZipFileName.EndsWith(".zip.enc"))
-                        {
-                            string newZipFileName = Path.GetFileNameWithoutExtension(entry.ZipFileName); //Cut .enc
-
-                            try
-                            {
-                                DecryptArchive(entry.ZipFileName, newZipFileName, cancellationToken);
-                            }
-                            catch (Exception ex)
-                            {
-                                log.Error($"Error decrypting archive {entry.ZipFileName}: {ex.Message}", ex);
-                            }
-
-                            if (cancellationToken.IsCancellationRequested)
-                                break;
-
-                            _zipFile = ZipFile.Read(Path.Combine(PathHelper.GetTempPath(), newZipFileName));
-                        }
-                        else
-                        {
-                            _zipFile = ZipFile.Read(Path.Combine(PathHelper.GetTempPath(), _zipFileName));
-                        }
-
-                        _zipFile.ExtractProgress += _zipFile_ExtractProgress;
-                    } catch (Exception ex)
-                    {
-                        log.Error($"Error reading zip file: {entry.ZipFileName}: {ex.Message}", ex);
-                    }
+                    await _plugin.OpenSessionAsync(_pluginProperties, cancellationToken);
                 }
 
-                var zipEntry = _zipFile?.Entries.FirstOrDefault(x => x.FileName.Equals(entry.GeneratedFileName));
-
-                if(zipEntry == null) 
+                foreach (var entry in entries)
                 {
-                    log.Warn($"Couldn't find entry {entry.GeneratedFileName} for {entry.FileName} in zip: {entry.ZipFileName}");
-                } else
-                {
-                    try
-                    {
-                        ChangeState(ExtractState.Extracting);
-                        _bytesExtracted = 0;                        
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
 
-                        zipEntry.Extract(PathHelper.GetTempPath(), ExtractExistingFileAction.OverwriteSilently);
-                    } catch (Exception ex)
+                    ExtractingNewFile?.Invoke(entry);
+
+                    if (_zipFile == null || !String.Equals(entry.ZipFileName, _zipFileName))
                     {
-                        log.Error($"Error extracting {entry.GeneratedFileName} from {entry.ZipFileName}", ex);
+                        _zipFile?.Dispose();
+                        _zipFile = null;
+
+                        _zipFileName = entry.ZipFileName;
+
+                        log.Debug($"Downloading {entry.ZipFileName}");
+
+                        await DownloadArchiveWithRetries(_zipFileName, cancellationToken);
+
+                        try
+                        {
+                            if (entry.ZipFileName.EndsWith(".zip.enc"))
+                            {
+                                string newZipFileName = Path.GetFileNameWithoutExtension(entry.ZipFileName); //Cut .enc
+
+                                try
+                                {
+                                    DecryptArchive(entry.ZipFileName, newZipFileName, cancellationToken);
+                                }
+                                catch (Exception ex)
+                                {
+                                    log.Error($"Error decrypting archive {entry.ZipFileName}: {ex.Message}", ex);
+                                }
+
+                                if (cancellationToken.IsCancellationRequested)
+                                    break;
+
+                                _zipFile = ZipFile.Read(Path.Combine(PathHelper.GetTempPath(), newZipFileName));
+                            }
+                            else
+                            {
+                                _zipFile = ZipFile.Read(Path.Combine(PathHelper.GetTempPath(), _zipFileName));
+                            }
+
+                            _zipFile.ExtractProgress += _zipFile_ExtractProgress;
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error($"Error reading zip file: {entry.ZipFileName}: {ex.Message}", ex);
+                        }
                     }
 
-                    string tempFileName = Path.Combine(PathHelper.GetTempPath(), entry.GeneratedFileName);
-                    string destFileName = Path.Combine(_destinationFolder, entry.FileName);
+                    var zipEntry = _zipFile?.Entries.FirstOrDefault(x => x.FileName.Equals(entry.GeneratedFileName));
 
-                    try
+                    if (zipEntry == null)
                     {
-                        File.Move(tempFileName, destFileName);
+                        log.Warn($"Couldn't find entry {entry.GeneratedFileName} for {entry.FileName} in zip: {entry.ZipFileName}");
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        log.Error($"Error moving {tempFileName} to {destFileName}: {ex.Message}", ex);
+                        try
+                        {
+                            ChangeState(ExtractState.Extracting);
+                            _bytesExtracted = 0;
+
+                            zipEntry.Extract(PathHelper.GetTempPath(), ExtractExistingFileAction.OverwriteSilently);
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error($"Error extracting {entry.GeneratedFileName} from {entry.ZipFileName}", ex);
+                        }
+
+                        string tempFileName = Path.Combine(PathHelper.GetTempPath(), entry.GeneratedFileName);
+                        string destFileName = Path.Combine(_destinationFolder, entry.FileName);
+
+                        try
+                        {
+                            File.Move(tempFileName, destFileName);
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error($"Error moving {tempFileName} to {destFileName}: {ex.Message}", ex);
+                        }
                     }
+
+                    _filesProcessed++;
+                    _bytesProcessed += entry.FileSize;
+
+                    ExtractingProgress?.Invoke(this, EventArgs.Empty);
                 }
 
-                _filesProcessed++;
-                _bytesProcessed += entry.FileSize;
+                ExtractSavedState.Clear();
 
-                ExtractingProgress?.Invoke(this, EventArgs.Empty);
             }
+            catch (Exception ex)
+            {
+                log.Error("Error in ExtractWorker.DoWork()", ex);
+            }
+            finally
+            {
+                if (_plugin?.KeepSession ?? false)
+                {
+                    try
+                    {
+                        await _plugin.CloseSessionAsync(cancellationToken);
+                    }
+                    catch (Exception) {/* ignore */}
+                }
 
-            ExtractSavedState.Clear();
+                ChangeState(ExtractState.Completed);
+                IsBusy = false;
+            }
         }
 
         private void _zipFile_ExtractProgress(object sender, ExtractProgressEventArgs e)

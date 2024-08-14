@@ -101,7 +101,7 @@ namespace EcorRouge.Archive.Utility
 
         public string DownloadsDir { get; } = Path.Combine(PathHelper.GetTempPath(), "Downloads");
 
-        public static RSA ImportKeypair(string filename)
+        public static RSA ImportKeypair(string filename, bool importPublic, bool importPrivate)
         {
             var rsa = RSA.Create();
 
@@ -147,8 +147,11 @@ namespace EcorRouge.Archive.Utility
                 throw new ArgumentException("Missing public key!");
             }
 
-            rsa.ImportFromPem(privateKey.ToString().ToCharArray());
-            rsa.ImportFromPem(publicKey.ToString().ToCharArray());
+            if(importPrivate)
+                rsa.ImportFromPem(privateKey.ToString().ToCharArray());
+
+            if(importPublic)
+                rsa.ImportFromPem(publicKey.ToString().ToCharArray());
 
             return rsa;
         }
@@ -250,7 +253,7 @@ namespace EcorRouge.Archive.Utility
             {
                 try
                 {
-                    _rsa = ImportKeypair(_savedState.KeypairFilename);
+                    _rsa = ImportKeypair(_savedState.KeypairFilename, true, false);
                 }
                 catch (Exception ex)
                 {

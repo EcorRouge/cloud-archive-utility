@@ -174,7 +174,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             {
                 try
                 {
-                    _ = ArchiverWorker.ImportKeypair(ofd.FileName);
+                    _ = ArchiverWorker.ImportKeypair(ofd.FileName, false, true);
                     KeypairFileName = ofd.FileName;
                 }
                 catch (Exception ex)

@@ -365,7 +365,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 return;
 
             CanSelectSettings = false;
-            CanSelectProgress = false;
+            CanSelectProgress = false;            
             CanSelectFinish = true;
 
             TotalCompletedFilesLabel = $"Total files processed: {_worker.FilesProcessed}, errors: {_worker.FilesFailed}";
