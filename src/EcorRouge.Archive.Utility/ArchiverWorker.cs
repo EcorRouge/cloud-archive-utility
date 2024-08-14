@@ -682,10 +682,32 @@ namespace EcorRouge.Archive.Utility
 
             var zipFileName = Path.Combine(PathHelper.GetTempPath(), Path.GetFileNameWithoutExtension(_manifestFileName) + ".zip");
 
+            var credentialsFileName = Path.Combine(PathHelper.GetTempPath(), "credentials.txt");
+
+            if(_savedState.EncryptFiles)
+            {
+                var properties = _savedState.PluginProperties;
+                var encrypted = _rsa.Encrypt(Encoding.ASCII.GetBytes(properties), RSAEncryptionPadding.Pkcs1);
+
+                var encryptedProperties = BitConverter.ToString(encrypted);
+
+                using(var writer = new StreamWriter(credentialsFileName, false))
+                {
+                    writer.WriteLine($"Type={_savedState.PluginType}");
+                    writer.WriteLine($"Properties={encryptedProperties}");
+                }
+            }
+
             using (var zip = new ZipFile())
             {
                 zip.UseZip64WhenSaving = Zip64Option.Always;
                 zip.AddFile(_manifestFileName, "");
+
+                if (_savedState.EncryptFiles)
+                {
+                    zip.AddFile(credentialsFileName, "");
+                }
+
                 zip.Save(zipFileName);
             }
 
@@ -702,6 +724,19 @@ namespace EcorRouge.Archive.Utility
             {
                 log.Error("Error deleting manifest", ex);
             }
+
+            if (_savedState.EncryptFiles)
+            {
+                try
+                {
+                    File.Delete(credentialsFileName);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("Error deleting manifest", ex);
+                }
+            }
+
             try
             {
                 File.Delete(zipFileName);
