@@ -12,6 +12,7 @@ namespace EcorRouge.Archive.Utility.Util
         public long TotalFiles { get; set; }
         public long TotalFilesSize { get; set; }
         public bool IsZip { get; set; }
+        public bool ContainsEncryptedCredentials { get; set; }
         public int Columns { get; set; }
         public string PluginType { get; set; }
         public string PluginProperties { get; set; }

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 
 namespace EcorRouge.Archive.Utility.ViewModels
 {
@@ -56,8 +57,40 @@ namespace EcorRouge.Archive.Utility.ViewModels
                     _inputFile = ManifestFileParser.ScanFile(FileName, null);
 
                     TotalFilesInArchive = _inputFile.TotalFiles;
-                    TotalFileSizeInArchive = _inputFile.TotalFilesSize;                    
+                    TotalFileSizeInArchive = _inputFile.TotalFilesSize;
 
+                    if(_inputFile.ContainsEncryptedCredentials) 
+                    { 
+                        ChooseKeypair();
+
+                        if(!String.IsNullOrWhiteSpace(KeypairFileName))
+                        {
+                            _inputFile = ManifestFileParser.ScanFile(FileName, KeypairFileName);
+
+                            if (!String.IsNullOrWhiteSpace(_inputFile.PluginType))
+                            {
+                                var pluginIndex = CloudProviders.IndexOf(_inputFile.PluginType);
+
+                                if (pluginIndex >= 0)
+                                {
+                                    SelectedProviderIndex = pluginIndex;
+
+                                    if (!String.IsNullOrWhiteSpace(_inputFile.PluginProperties))
+                                    {
+                                        var settings = JsonConvert.DeserializeObject<Dictionary<string, object>>(_inputFile.PluginProperties);
+
+                                        for (int i = 0; i < PluginProperties.Length; i++)
+                                        {
+                                            if (settings.ContainsKey(PluginProperties[i].Name))
+                                            {
+                                                PluginProperties[i].Value = settings[PluginProperties[i].Name].ToString();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }, _fileOpenCts.Token).ContinueWith(t =>
                 {
                     _fileLoading = false;

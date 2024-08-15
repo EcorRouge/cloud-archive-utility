@@ -168,6 +168,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private void ChooseKeypair()
         {
             var ofd = new OpenFileDialog();
+            ofd.Title = "Choose keypair to decrypt files";
             ofd.Filter = "Key files|*.key";
 
             if (ofd.ShowDialog() == DialogResult.OK)

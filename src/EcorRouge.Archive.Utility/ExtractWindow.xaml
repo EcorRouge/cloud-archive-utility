@@ -312,7 +312,7 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <TextBlock Style="{StaticResource HeaderStyle2}" HorizontalAlignment="Center">
-            Archiving finished
+            Extracting finished
                             </TextBlock>
                             <TextBlock Grid.Row="2" HorizontalAlignment="Center" Text="{Binding TotalCompletedFilesLabel}"/>
                             <TextBlock Grid.Row="3" HorizontalAlignment="Center" Text="{Binding TotalCompletedBytesLabel}"/>
