@@ -63,7 +63,7 @@ namespace EcorRouge.Archive.Utility.Util
             return (columns, separator);
         }
 
-        public static ManifestFile ScanFile(string fileName)
+        public static ManifestFile ScanFile(string fileName, string keypair)
         {
             log.Debug($"Scanning file: {fileName}");
 

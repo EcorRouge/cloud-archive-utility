@@ -53,7 +53,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
                     TotalFilesInArchive = 0;
                     TotalFileSizeInArchive = 0;
                     
-                    _inputFile = ManifestFileParser.ScanFile(FileName);
+                    _inputFile = ManifestFileParser.ScanFile(FileName, null);
 
                     TotalFilesInArchive = _inputFile.TotalFiles;
                     TotalFileSizeInArchive = _inputFile.TotalFilesSize;                    
