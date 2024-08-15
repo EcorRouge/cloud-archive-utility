@@ -72,7 +72,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             _searchRegexs = new Regex[parts.Length];
             for(int i = 0; i < parts.Length; i++)
             {
-                _searchRegexs[i] = BuildRegex(parts[i]);
+                _searchRegexs[i] = BuildRegex(parts[i].ToLower());
             }
         }
 
@@ -83,7 +83,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
 
             foreach (var re in _searchRegexs)
             {
-                if (re.IsMatch(path))
+                if (re.IsMatch(path.ToLower()))
                     return true;
             }
 
