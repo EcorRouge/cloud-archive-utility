@@ -138,10 +138,10 @@ namespace EcorRouge.Archive.Utility.ViewModels
             var pluginProperties = GetProperties(_pluginProperties);
             AddPropertiesToSettings(plugin.ProviderName, pluginProperties);
 
-            if (_savedState.IsEmpty)
-            {
+            //if (_savedState.IsEmpty)
+            //{
                 _savedState.SetPluginProperties(pluginProperties);
-            }
+            //}
 
             _savedState.PluginType = plugin?.ProviderName;
             _savedState.KeypairFilename = _keypairFileName;
