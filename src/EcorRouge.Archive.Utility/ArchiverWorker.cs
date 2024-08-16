@@ -686,10 +686,7 @@ namespace EcorRouge.Archive.Utility
 
             if(_savedState.EncryptFiles)
             {
-                var properties = _savedState.PluginProperties;
-                var encrypted = _rsa.Encrypt(Encoding.UTF8.GetBytes(properties), RSAEncryptionPadding.Pkcs1);
-
-                var encryptedProperties = Convert.ToBase64String(encrypted);
+                var encryptedProperties = StringProtection.EncryptStringRsa(_rsa, _savedState.PluginProperties);
 
                 using(var writer = new StreamWriter(credentialsFileName, false))
                 {

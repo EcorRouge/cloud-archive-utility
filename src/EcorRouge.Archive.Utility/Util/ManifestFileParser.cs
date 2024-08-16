@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using EcorRouge.Archive.Utility.Settings;
 using Ionic.Zip;
 using log4net;
 
@@ -90,6 +91,50 @@ namespace EcorRouge.Archive.Utility.Util
             if (result.IsZip)
             {
                 using var zip = ZipFile.Read(fileName);
+
+                var credentialsEntry = zip.Entries.FirstOrDefault(x => x.FileName.Equals("credentials.txt"));
+
+                if(credentialsEntry != null)
+                {
+                    result.ContainsEncryptedCredentials = true;
+
+                    try
+                    {
+                        if (!String.IsNullOrEmpty(keypair))
+                        {
+                            using (var reader = new StreamReader(credentialsEntry.OpenReader()))
+                            {
+                                while (!reader.EndOfStream)
+                                {
+                                    var line = reader.ReadLine();
+                                    if (!String.IsNullOrWhiteSpace(line))
+                                    {
+                                        var parts = line.Split("=", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                                        if (parts.Length >= 2)
+                                        {
+                                            if ("Type".Equals(parts[0], StringComparison.InvariantCultureIgnoreCase))
+                                            {
+                                                result.PluginType = parts[1];
+                                            }
+                                            else if ("Properties".Equals(parts[0], StringComparison.InvariantCultureIgnoreCase))
+                                            {
+                                                var rsa = ArchiverWorker.ImportKeypair(keypair, false, true);
+
+                                                var properties = StringProtection.DecryptStringRsa(rsa, line.Substring("Properties=".Length));
+                                                result.PluginProperties = StringProtection.DecryptString(properties); //2nd protection layer
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"Error decrypting stored credentials: {ex.Message}", ex);
+                    }
+                }
+
                 foreach (var entry in zip.Entries)
                 {
                     log.Debug($"  zip entry={entry.FileName}");
@@ -97,46 +142,8 @@ namespace EcorRouge.Archive.Utility.Util
                     if (entry.FileName.StartsWith("__")) // Skip __MACOSX
                         continue;
 
-                    if(entry.FileName.Equals("credentials.txt"))
-                    {
-                        result.ContainsEncryptedCredentials = true;
-
-                        try
-                        {
-                            if (!String.IsNullOrEmpty(keypair))
-                            {
-                                using (var reader = new StreamReader(entry.OpenReader()))
-                                {
-                                    while (!reader.EndOfStream)
-                                    {
-                                        var line = reader.ReadLine();
-                                        if (!String.IsNullOrWhiteSpace(line))
-                                        {
-                                            var parts = line.Split("=", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                                            if (parts.Length >= 2)
-                                            {
-                                                if ("Type".Equals(parts[0], StringComparison.InvariantCultureIgnoreCase))
-                                                {
-                                                    result.PluginType = parts[1];
-                                                }
-                                                else if ("Properties".Equals(parts[0], StringComparison.InvariantCultureIgnoreCase))
-                                                {
-                                                    var rsa = ArchiverWorker.ImportKeypair(keypair, false, true);
-                                                    var buf = Convert.FromBase64String(parts[1].Trim());
-
-                                                    result.PluginProperties = Encoding.UTF8.GetString(rsa.Decrypt(buf, RSAEncryptionPadding.Pkcs1));
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (Exception ex)
-                        {
-                            log.Error($"Error decrypting stored credentials: {ex.Message}", ex);
-                        }
+                    if (entry.FileName.Equals("credentials.txt"))
                         continue;
-                    }
 
                     using (var reader = new StreamReader(entry.OpenReader()))
                     {

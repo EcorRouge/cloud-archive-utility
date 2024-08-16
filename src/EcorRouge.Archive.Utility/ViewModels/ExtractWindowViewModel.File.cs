@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Win32;
 using Newtonsoft.Json;
+using System.Windows.Threading;
+using System.Windows;
 
 namespace EcorRouge.Archive.Utility.ViewModels
 {
@@ -60,10 +62,13 @@ namespace EcorRouge.Archive.Utility.ViewModels
                     TotalFileSizeInArchive = _inputFile.TotalFilesSize;
 
                     if(_inputFile.ContainsEncryptedCredentials) 
-                    { 
-                        ChooseKeypair();
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            ChooseKeypair();
+                        });
 
-                        if(!String.IsNullOrWhiteSpace(KeypairFileName))
+                        if (!String.IsNullOrWhiteSpace(KeypairFileName))
                         {
                             _inputFile = ManifestFileParser.ScanFile(FileName, KeypairFileName);
 

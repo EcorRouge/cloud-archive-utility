@@ -150,7 +150,7 @@
                             <TextBox Grid.Row="1" Text="{Binding SearchExpression, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnlyCaretVisible="True"/>
                             <TextBlock Grid.Row="2" FontSize="8">Spaces act as delimiters for path and file names. Commas - to split expressions. Example: *.docx, some folder *24 *.xlsx</TextBlock>
 
-                            <DataGrid Grid.Row="3" ItemsSource="{Binding SelectedFiles}" AutoGenerateColumns="False" CanUserResizeColumns="True">
+                            <DataGrid Grid.Row="3" ItemsSource="{Binding SelectedFiles}" AutoGenerateColumns="False" CanUserResizeColumns="True" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" IsReadOnly="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="File name" Binding="{Binding FileName}" Width="130"/>
                                     <DataGridTextColumn Header="File size" Binding="{Binding FileSize, Converter={StaticResource FileSizeFormatter}}"/>
