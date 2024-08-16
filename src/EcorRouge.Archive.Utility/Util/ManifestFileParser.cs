@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Ionic.Zip;
@@ -73,7 +74,10 @@ namespace EcorRouge.Archive.Utility.Util
                 IsZip = false,
                 Columns = 0,
                 TotalFiles = 0,
-                TotalFilesSize = 0
+                TotalFilesSize = 0,
+                ContainsEncryptedCredentials = false,
+                PluginType = null,
+                PluginProperties = null
             };
 
             if (Path.GetExtension(fileName).Equals(".zip", StringComparison.InvariantCultureIgnoreCase))
@@ -92,6 +96,47 @@ namespace EcorRouge.Archive.Utility.Util
 
                     if (entry.FileName.StartsWith("__")) // Skip __MACOSX
                         continue;
+
+                    if(entry.FileName.Equals("credentials.txt"))
+                    {
+                        result.ContainsEncryptedCredentials = true;
+
+                        try
+                        {
+                            if (!String.IsNullOrEmpty(keypair))
+                            {
+                                using (var reader = new StreamReader(entry.OpenReader()))
+                                {
+                                    while (!reader.EndOfStream)
+                                    {
+                                        var line = reader.ReadLine();
+                                        if (!String.IsNullOrWhiteSpace(line))
+                                        {
+                                            var parts = line.Split("=", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                                            if (parts.Length >= 2)
+                                            {
+                                                if ("Type".Equals(parts[0], StringComparison.InvariantCultureIgnoreCase))
+                                                {
+                                                    result.PluginType = parts[1];
+                                                }
+                                                else if ("Properties".Equals(parts[0], StringComparison.InvariantCultureIgnoreCase))
+                                                {
+                                                    var rsa = ArchiverWorker.ImportKeypair(keypair, false, true);
+                                                    var buf = Convert.FromBase64String(parts[1].Trim());
+
+                                                    result.PluginProperties = Encoding.UTF8.GetString(rsa.Decrypt(buf, RSAEncryptionPadding.Pkcs1));
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (Exception ex)
+                        {
+                            log.Error($"Error decrypting stored credentials: {ex.Message}", ex);
+                        }
+                        continue;
+                    }
 
                     using (var reader = new StreamReader(entry.OpenReader()))
                     {
@@ -152,6 +197,9 @@ namespace EcorRouge.Archive.Utility.Util
                     log.Debug($"  zip entry={zipEntry.FileName}");
 
                     if (zipEntry.FileName.StartsWith("__")) // Skip __MACOSX
+                        continue;
+
+                    if (zipEntry.FileName.Equals("credentials.txt"))
                         continue;
 
                     entries.Add(zipEntry);
