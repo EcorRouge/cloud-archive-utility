@@ -4,11 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EcorRouge.Archive.Utility"
-        xmlns:designvm="clr-namespace:EcorRouge.Archive.Utility.ViewModels.Design"
-        xmlns:converters="clr-namespace:EcorRouge.Archive.Utility.Converters"
-        xmlns:controls="clr-namespace:EcorRouge.Archive.Utility.Controls"
         mc:Ignorable="d"
-        d:DataContext="{d:DesignInstance Type=designvm:MainWindowViewModelDesign, IsDesignTimeCreatable=True}"
         SizeToContent="Height"
         MinHeight="600"
         Width="800"
@@ -17,301 +13,31 @@
         Background ="Transparent"
         AllowsTransparency="True"
         MouseDown="MainWindow_OnMouseDown"
+        WindowStartupLocation="CenterScreen"
         >
-  <Window.Resources>
-    <converters:TabIndexToBoolConverter x:Key="TabIndexToBoolConverter"/>
-    <converters:FileCountFormatter x:Key="FileCountFormatter"/>
-    <converters:FileSizeFormatter x:Key="FileSizeFormatter"/>
-    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-  </Window.Resources>
-  <Border CornerRadius="8">
-    <Grid>
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="180"/>
-        <ColumnDefinition/>
-      </Grid.ColumnDefinitions>
-      <Grid.RowDefinitions>
-        <RowDefinition Height="40"/>
-        <RowDefinition />
-      </Grid.RowDefinitions>
-
-      <!--<Border Background="{StaticResource MainWindowBackgroundTitleBrush}" CornerRadius="8,0,0,0">
-        <Image Source="{StaticResource WhiteLogo}" HorizontalAlignment="Left" Margin="10,5,0,5"/>
-      </Border>-->
-
-      <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Background="{StaticResource MainWindowBackgroundTitleBrush}" CornerRadius="8,8,0,0">
-        <TextBlock Style="{StaticResource HeaderStyle1}" Text="Archive Utility" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-      </Border>
-
-      <Border Grid.Row="1" Grid.Column="0" Background="{StaticResource NavbarBrush}" CornerRadius="0,0,0,8" BorderThickness="1,0,0,1" BorderBrush="LightGray">
+    <Border CornerRadius="8">
         <Grid>
-          <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition Height="20"/>
-            <RowDefinition Height="40"/>
-          </Grid.RowDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
-          <StackPanel Margin="8, 16, 0, 0">
-            <TextBlock Text="{Binding AppVersionString}"/>
-            <RadioButton Style="{StaticResource NavItemStyle}" 
-                         ToolTip="Choose file" 
-                         IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=0}" 
-                         IsEnabled="{Binding CanSelectFile}"
-                         Command="{Binding SelectFileCommand}"
-            />
-            <RadioButton Style="{StaticResource NavItemStyle}" 
-                         ToolTip="Settings" 
-                         IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=1}" 
-                         IsEnabled="{Binding CanSelectSettings}"
-                         Command="{Binding SelectSettingsCommand}"
-                         />
-            <RadioButton Style="{StaticResource NavItemStyle}" 
-                         ToolTip="Progress" IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=2}" 
-                         IsEnabled="{Binding CanSelectProgress}"
-                         Command="{Binding SelectProgressCommand}"
-                         />
-            <RadioButton Style="{StaticResource NavItemStyle}" 
-                         ToolTip="Finish" 
-                         IsChecked="{Binding SelectedPageIndex, Converter={StaticResource TabIndexToBoolConverter}, ConverterParameter=3}" 
-                         IsEnabled="{Binding CanSelectFinish}"
-                         Command="{Binding SelectFinishCommand}"
-                         />
-          </StackPanel>
+            <Border Grid.Row="0" Grid.ColumnSpan="2" Background="{StaticResource MainWindowBackgroundTitleBrush}" CornerRadius="8,8,0,0">
+                <TextBlock Style="{StaticResource HeaderStyle1}" Text="Archive Utility" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
 
-          <Button Grid.Row="1" Style="{StaticResource NavButtonStyle}" Command="{Binding ShowLogsCommand}">Show logs</Button>
-          <Button Grid.Row="2" Style="{StaticResource NavButtonStyle}" Command="{Binding ExitCommand}">
-            <TextBlock Style="{StaticResource HeaderStyle3}">Exit</TextBlock>
-          </Button>
+            <Border Grid.Row="1" Background="{StaticResource NavbarBrush}" CornerRadius="0,0,8,8">
+                <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center">
+
+                    <Button Style="{StaticResource StartModeButtonStyle}" Click="ArchiveButton_Click" Width="300">
+                        <TextBlock Foreground="White" FontSize="18" FontWeight="Bold">ARCHIVE FILES</TextBlock>
+                    </Button>
+                    <Button Style="{StaticResource StartModeButtonStyle}" Click="ExtractButton_Click" Width="300">
+                        <TextBlock Foreground="White" FontSize="18" FontWeight="Bold">EXTRACT FILES</TextBlock>
+                    </Button>
+                </StackPanel>
+            </Border>
+
         </Grid>
-      </Border>
-
-      <Border Grid.Row="1" Grid.Column="1" CornerRadius="0,0,8,0" Background="White" BorderThickness="0,0,1,1" BorderBrush="LightGray">
-        <TabControl Style="{StaticResource TabControlStyle}" SelectedIndex="{Binding SelectedPageIndex}">
-          <TabItem>
-            <Grid Margin="24">
-              <Grid.RowDefinitions>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="48"/>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="*"/>
-              </Grid.RowDefinitions>
-              <TextBlock>Choose file for archiving:</TextBlock>
-              <TextBox Grid.Row="1" Text="{Binding FileName}" IsReadOnlyCaretVisible="True" IsReadOnly="True"/>
-              <Button Grid.Row="2" 
-                      Style="{StaticResource NavButtonStyle}" 
-                      Command="{Binding BrowseFileCommand}"
-                      IsEnabled="{Binding CanBrowseFile}"
-                      Content="Browse" />
-
-              <StackPanel Orientation="Horizontal" Grid.Row="4">
-                <TextBlock FontWeight="Bold">Total files to archive:</TextBlock>
-                <TextBlock Text="{Binding TotalFilesToArchive, Converter={StaticResource FileCountFormatter}}" Margin="8,0,0,0"/>
-              </StackPanel>
-              <StackPanel Orientation="Horizontal" Grid.Row="5">
-                <TextBlock FontWeight="Bold">Total size to archive:</TextBlock>
-                <TextBlock Text="{Binding TotalFileSizeToArchive, Converter={StaticResource FileSizeFormatter}}" Margin="8,0,0,0"/>
-              </StackPanel>
-
-              <Button Grid.Row="6" 
-                      Style="{StaticResource ContinueButtonStyle}" 
-                      VerticalAlignment="Center"
-                      Visibility="{Binding CanSelectSettings, Converter={StaticResource BooleanToVisibilityConverter}}"
-                      Command="{Binding SelectSettingsCommand}"
-                      >Continue ></Button>
-            </Grid>
-          </TabItem>
-          <TabItem>
-            <Grid>
-              <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="48"/>
-                <RowDefinition Height="24"/>
-              </Grid.RowDefinitions>
-              <TabControl Margin="4" Style="{StaticResource RightTabControlStyle}" SelectedIndex="{Binding SelectedModeIndex}">
-                <TabItem>
-                  <TabItem.Header>
-                    <TextBlock Style="{StaticResource TabItemText}">Compress and Upload Files</TextBlock>
-                  </TabItem.Header>
-                  <Grid Margin="24">
-                    <Grid.RowDefinitions>
-                      <RowDefinition Height="24"/>
-                      <RowDefinition Height="24"/>
-                      <RowDefinition Height="36"/>
-                      <RowDefinition Height="*"/>
-                      <RowDefinition Height="36"/>
-                      <RowDefinition Height="*"/>
-                      <RowDefinition Height="24"/>
-                      <RowDefinition Height="24"/>
-                    </Grid.RowDefinitions>
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
-                      <TextBlock>Maximum files in one archive:</TextBlock>
-                      <TextBox Width="50" Margin="8,0,0,0" Text="{Binding MaximumFiles}"/>
-                    </StackPanel>
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
-                      <TextBlock>Maximum archive size, Mb:</TextBlock>
-                      <TextBox Width="50" Margin="22,0,0,0" Text="{Binding MaximumArchiveSizeMb}"/>
-                    </StackPanel>
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Bottom">
-                      <TextBlock>Source:</TextBlock>
-                      <ComboBox Width="150" Margin="19,0,0,0" ItemsSource="{Binding SourceCloudConnectors}" SelectedItem="{Binding SelectedConnectorType, Mode=TwoWay}"/>
-                    </StackPanel>
-                    <GroupBox Grid.Row="3" Header="Source Settings">
-                        <ItemsControl ItemsSource="{Binding ConnectorProperties}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="5">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="150"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Title}"/>
-                                            <TextBlock Text=":"/>
-                                        </StackPanel>
-
-                                        <TextBox Grid.Column="1" Margin="16,0,0,0" Text="{Binding Value}" VerticalAlignment="Center" Visibility="{Binding IsText, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-
-                                        <Grid Grid.Column="1" Margin="16,0,0,0" Visibility="{Binding IsFolder, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Stretch">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="30"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox Grid.Column="0" Text="{Binding Value}" VerticalAlignment="Center" IsReadOnly="True"/>
-                                            <Button Grid.Column="1" Command="{Binding ChooseFolderCommand}">...</Button>
-                                        </Grid>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </GroupBox>
-                    <StackPanel Grid.Row="4" Orientation="Horizontal" VerticalAlignment="Bottom">
-                          <TextBlock>Destination:</TextBlock>
-                          <ComboBox Width="150" Margin="19,0,0,0" ItemsSource="{Binding CloudProviders}" SelectedIndex="{Binding SelectedProviderIndex}"/>
-                    </StackPanel>
-                    <GroupBox Grid.Row="5" Header="Destination Settings">
-                      <ItemsControl ItemsSource="{Binding PluginProperties}">
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate>
-                            <Grid Margin="5">
-                              <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="*"/>
-                              </Grid.ColumnDefinitions>
-                              <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Title}"/>
-                                <TextBlock Text=":"/>
-                              </StackPanel>
-
-                              <TextBox Grid.Column="1" Margin="16,0,0,0" Text="{Binding Value}" VerticalAlignment="Center" Visibility="{Binding IsText, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-
-                              <Grid Grid.Column="1" Margin="16,0,0,0" Visibility="{Binding IsFolder, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Stretch">
-                                <Grid.ColumnDefinitions>
-                                  <ColumnDefinition Width="*"/>
-                                  <ColumnDefinition Width="30"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" Text="{Binding Value}" VerticalAlignment="Center" IsReadOnly="True"/>
-                                <Button Grid.Column="1" Command="{Binding ChooseFolderCommand}">...</Button>
-                              </Grid>
-                            </Grid>
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
-                    </GroupBox>
-
-                    <CheckBox Grid.Row="7" IsChecked="{Binding DeleteFilesAfterUpload}">Delete files after upload</CheckBox>
-                  </Grid>
-                </TabItem>
-                <TabItem>
-                  <TabItem.Header>
-                    <TextBlock Style="{StaticResource TabItemText}">Delete All Files</TextBlock>
-                  </TabItem.Header>
-
-                  <StackPanel Orientation="Vertical" Margin="24,48" HorizontalAlignment="Center" VerticalAlignment="Top">
-                    <TextBlock Style="{StaticResource HeaderStyle3}" HorizontalAlignment="Center">Caution! In this mode Archive Utility will just remove all selected files!</TextBlock>
-                    <TextBlock Style="{StaticResource HeaderStyle3}" HorizontalAlignment="Center">Please make sure that you actually want to do this.</TextBlock>
-                  </StackPanel>
-                </TabItem>
-              </TabControl>
-
-              <Button Grid.Row="1" 
-                      Style="{StaticResource StartButtonStyle}" 
-                      VerticalAlignment="Center" 
-                      IsEnabled="{Binding CanStart}"
-                      Command="{Binding StartCommand}"
-              >START</Button>
-            </Grid>
-          </TabItem>
-          <TabItem>
-            <Grid Margin="24">
-              <Grid.RowDefinitions>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="16"/>
-                <RowDefinition Height="16"/>
-                <RowDefinition Height="32"/>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="16"/>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="16"/>
-                <RowDefinition Height="48"/>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="16"/>
-                <RowDefinition Height="*"/>
-              </Grid.RowDefinitions>
-              <TextBlock HorizontalAlignment="Center" Text="{Binding ArchivingLabel}"/>
-              <ProgressBar Grid.Row="1" Height="5" VerticalAlignment="Top" Maximum="100" Value="{Binding ArchiveProgress}"/>
-              <ProgressBar Grid.Row="2" Height="5" VerticalAlignment="Top" Maximum="100" Value="{Binding ArchiveFileProgress}"/>
-              <TextBlock Grid.Row="3" HorizontalAlignment="Center" TextWrapping="Wrap" Text="{Binding CurrentFileLabel}"/>
-              <TextBlock Grid.Row="4" HorizontalAlignment="Center" Text="{Binding UploadingLabel}" Visibility="{Binding UploadingVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-              <ProgressBar Grid.Row="5" Height="5" VerticalAlignment="Top" Maximum="100" Value="{Binding UploadProgress}" Visibility="{Binding UploadingVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-              <TextBlock Grid.Row="6" HorizontalAlignment="Center" Text="{Binding DeletingLabel}" Visibility="{Binding DeletingVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-              <ProgressBar Grid.Row="7" Height="5" VerticalAlignment="Top" Maximum="100" Value="{Binding DeleteProgress}" Visibility="{Binding DeletingVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-              <TextBlock Grid.Row="9" HorizontalAlignment="Center" Text="{Binding TotalLabel}" />
-              <ProgressBar Grid.Row="10" Height="5" VerticalAlignment="Top" Maximum="100" Value="{Binding TotalProgress}"/>
-
-              <Button Grid.Row="11" Style="{StaticResource CancelButtonStyle}" VerticalAlignment="Center" Command="{Binding CancelProgressCommand}">Cancel</Button>
-            </Grid>
-          </TabItem>
-          <TabItem>
-            <Grid Margin="24">
-              <Grid.RowDefinitions>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="*"/>
-              </Grid.RowDefinitions>
-              <TextBlock Style="{StaticResource HeaderStyle2}" HorizontalAlignment="Center">
-                Archiving finished
-              </TextBlock>
-              <TextBlock Grid.Row="2" HorizontalAlignment="Center" Text="{Binding TotalCompletedFilesLabel}"/>
-              <TextBlock Grid.Row="3" HorizontalAlignment="Center" Text="{Binding TotalCompletedBytesLabel}"/>
-            </Grid>
-          </TabItem>
-        </TabControl>
-      </Border>
-
-      <Border CornerRadius="0,0,8,8" Grid.Row="1" Grid.ColumnSpan="2" Background="Black" Opacity="0.5" Visibility="{Binding ShowDialogShadow, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-      
-      <controls:YesNoDialog 
-        Grid.Row="1" Grid.Column="2" Width="250" Height="{Binding DialogHeight}" 
-        Visibility="{Binding ShowYesNoDialog, Converter={StaticResource BooleanToVisibilityConverter}}" 
-        Text="{Binding DialogText}" 
-        Title="{Binding DialogTitle}" 
-        YesCommand="{Binding DialogYesCommand}"
-        NoCommand="{Binding DialogNoCommand}"
-        CancelCommand="{Binding DialogCancelCommand}"
-        />
-
-      <controls:OkDialog 
-        Grid.Row="1" Grid.Column="2" Width="250" Height="150" 
-        Visibility="{Binding ShowOkDialog, Converter={StaticResource BooleanToVisibilityConverter}}" 
-        Text="{Binding DialogText}" 
-        Title="{Binding DialogTitle}" 
-        OkCommand="{Binding DialogOkCommand}"
-        />
-
-    </Grid>
-  </Border>
+    </Border>
 </Window>

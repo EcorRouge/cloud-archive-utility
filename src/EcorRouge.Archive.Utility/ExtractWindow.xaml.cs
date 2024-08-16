@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EcorRouge.Archive.Utility.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,31 +16,28 @@ using System.Windows.Shapes;
 namespace EcorRouge.Archive.Utility
 {
     /// <summary>
-    /// Interaction logic for ChooseMode.xaml
+    /// Interaction logic for ExtractWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class ExtractWindow : Window
     {
-        public MainWindow()
+        public ExtractWindow()
         {
             InitializeComponent();
+
+            DataContext = new ExtractWindowViewModel();
+            Loaded += ExtractWindow_Loaded;
         }
 
-        private void MainWindow_OnMouseDown(object sender, MouseButtonEventArgs e)
+        private void ExtractWindow_OnMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left)
                 this.DragMove();
         }
 
-        private void ArchiveButton_Click(object sender, RoutedEventArgs e)
+        private void ExtractWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            new ArchiveWindow().Show();
-            Close();
+            (DataContext as ExtractWindowViewModel)?.CheckSavedState();
         }
 
-        private void ExtractButton_Click(object sender, RoutedEventArgs e)
-        {
-            new ExtractWindow().Show();
-            Close();
-        }
     }
 }

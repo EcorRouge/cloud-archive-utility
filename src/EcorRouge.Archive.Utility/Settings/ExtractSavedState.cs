@@ -1,57 +1,40 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace EcorRouge.Archive.Utility.Settings
 {
-    public class SavedState
+    public class ExtractSavedState
     {
-        private string _connectorProperties;
         private string _pluginProperties;
 
         [JsonIgnore]
         public bool IsEmpty { get; set; }
-        public int SelectedMode { get; set; }
 
-        public long FilesProcessed { get; set; }
-        public long BytesProcessed { get; set; }
-        public string InputFileName { get; set; }
-        public long TotalArchivedSize { get; set; }
-        public long TotalFilesToArchive { get; set; }
-        public long TotalFilesSizeToArchive { get; set; }
-        public string ManifestFileName { get; set; }
-        public string ArchiveFileName { get; set; }
+        public string InputFilename { get; set; }
+        public string SearchExpression { get; set; }        
+        public string DestinationFolder { get; set; }
 
         public string PluginType { get; set; }
-
-        public string ConnectorType { get; set; }
-
         public string PluginProperties
         {
             get => _pluginProperties;
             set => _pluginProperties = value;
         }
-
-        public string ConnectorProperties
-        {
-            get => _connectorProperties;
-            set => _connectorProperties = value;
-        }
-
-        public bool EncryptFiles { get; set; }
+        
         public string KeypairFilename { get; set; }
-        public bool DeleteFiles { get; set; }
-        public int MaximumFiles { get; set; }
-        public int MaximumArchiveSizeMb { get; set; }
+
+        public bool IsEncrypted { get; set; }
+        public string CurrentZipFileName { get; set; }        
+        public string CurrentEntryFileName { get; set; }
 
         public void SetPluginProperties(Dictionary<string, object> pluginProperties) => SetProperties(ref _pluginProperties, pluginProperties);
 
         public Dictionary<string, object> GetPluginProperties() => GetProperties(PluginProperties);
-
-        public void SetConnectorProperties(Dictionary<string, object> connectorProperties) => SetProperties(ref _connectorProperties, connectorProperties);
-
-        public Dictionary<string, object> GetConnectorProperties() => GetProperties(ConnectorProperties);
 
         public void SetProperties(ref string properties, Dictionary<string, object> connectorProperties)
         {
@@ -73,20 +56,20 @@ namespace EcorRouge.Archive.Utility.Settings
         }
 
         [JsonIgnore]
-        private static string FileName => Path.Combine(PathHelper.GetRootDataPath(true), "saved_state.json");
+        private static string FileName => Path.Combine(PathHelper.GetRootDataPath(true), "extract_saved_state.json");
 
-        public static SavedState Load()
+        public static ExtractSavedState Load()
         {
             var path = FileName;
             if (!File.Exists(path))
             {
-                return new SavedState()
+                return new ExtractSavedState()
                 {
                     IsEmpty = true
                 };
             }
 
-            var result = JsonConvert.DeserializeObject<SavedState>(File.ReadAllText(path));
+            var result = JsonConvert.DeserializeObject<ExtractSavedState>(File.ReadAllText(path));
             result.IsEmpty = false;
 
             return result;
@@ -101,5 +84,6 @@ namespace EcorRouge.Archive.Utility.Settings
         {
             File.WriteAllText(FileName, JsonConvert.SerializeObject(this, Formatting.Indented));
         }
+
     }
 }

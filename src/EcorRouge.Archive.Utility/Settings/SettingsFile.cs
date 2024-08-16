@@ -45,6 +45,10 @@ namespace EcorRouge.Archive.Utility.Settings
 
         public bool DeleteFilesAfterUpload { get; set; }
 
+        public bool EncryptFiles { get; set; }
+
+        public string KeypairFileName { get; set; }
+
         public int MaximumFiles { get; set; }
 
         public int MaximumArchiveSizeMb { get; set; }
@@ -93,6 +97,7 @@ namespace EcorRouge.Archive.Utility.Settings
                 ProviderIndex = 0,
                 ConnectorType = DefaultConnectorType,
                 DeleteFilesAfterUpload = true,
+                EncryptFiles = false,
                 MaximumFiles = 1000,
                 MaximumArchiveSizeMb = 2048,
                 PreviousCredentials = new Dictionary<string, string>()

@@ -1,13 +1,13 @@
-﻿using System;
+﻿using Microsoft.Toolkit.Mvvm.Input;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Toolkit.Mvvm.Input;
 
 namespace EcorRouge.Archive.Utility.ViewModels
 {
-    public partial class MainWindowViewModel
+    public partial class ExtractWindowViewModel
     {
         private bool _showDialogShadow;
         private bool _showYesNoDialog;
@@ -87,7 +87,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             get => _dialogHeight;
             set => SetProperty(ref _dialogHeight, value);
         }
-        
+
         public void DisplayYesNoDialog(string title, string text, int height, Action yesCallback, Action noCallback, Action cancelCallback)
         {
             ShowDialogShadow = true;

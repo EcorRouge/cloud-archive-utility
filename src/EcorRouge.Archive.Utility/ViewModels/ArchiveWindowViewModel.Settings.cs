@@ -7,10 +7,14 @@ using EcorRouge.Archive.Utility.CloudConnectors;
 using EcorRouge.Archive.Utility.Plugins;
 using Microsoft.Toolkit.Mvvm.Input;
 using EcorRouge.Archive.Utility.Settings;
+using System.Windows.Forms;
+using System.Security.Cryptography;
+using System.IO;
+using System.Text;
 
 namespace EcorRouge.Archive.Utility.ViewModels
 {
-    public partial class MainWindowViewModel
+    public partial class ArchiveWindowViewModel
     {
         private const int MODE_UPLOAD = 0;
         private const int MODE_DELETE = 1;
@@ -22,6 +26,8 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private string _selectedConnectorType;
         private int _selectedProviderIndex;
         private bool _deleteFilesAfterUpload;
+        private bool _encryptFiles;
+        private string _keypairFileName;
         private int _maximumFiles;
         private int _maximumArchiveSizeMb;
 
@@ -29,6 +35,9 @@ namespace EcorRouge.Archive.Utility.ViewModels
         public ObservableCollection<string> SourceCloudConnectors { get; } = new ObservableCollection<string>();
 
         public RelayCommand StartCommand { get; set; }
+        public RelayCommand ChooseKeypairFileCommand { get; set; }
+        public RelayCommand GenerateKeypairCommand { get; set; }
+
 
         public int SelectedModeIndex
         {
@@ -80,6 +89,27 @@ namespace EcorRouge.Archive.Utility.ViewModels
             set => SetProperty(ref _deleteFilesAfterUpload, value);
         }
 
+        public bool EncryptFiles
+        {
+            get => _encryptFiles;
+            set
+            {
+                SetProperty(ref _encryptFiles, value);
+                if(!value)
+                {
+                    KeypairFileName = null;
+                }
+
+                CanStart = CheckCanStart();
+            }
+        }
+
+        public string KeypairFileName
+        {
+            get => _keypairFileName;
+            set => SetProperty(ref _keypairFileName, value);
+        }
+
         public int MaximumFiles
         {
             get => _maximumFiles;
@@ -95,10 +125,14 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private void InitSettingsPage()
         {
             StartCommand = new RelayCommand(StartArchiving);
+            ChooseKeypairFileCommand = new RelayCommand(ChooseKeypair);
+            GenerateKeypairCommand = new RelayCommand(GenerateKeypair);
 
             SelectedProviderIndex = SettingsFile.Instance.ProviderIndex;
             SelectedConnectorType = SettingsFile.Instance.ConnectorType;
             DeleteFilesAfterUpload = SettingsFile.Instance.DeleteFilesAfterUpload;
+            KeypairFileName = SettingsFile.Instance.KeypairFileName;
+            EncryptFiles = SettingsFile.Instance.EncryptFiles;
             MaximumFiles = SettingsFile.Instance.MaximumFiles;
             MaximumArchiveSizeMb = SettingsFile.Instance.MaximumArchiveSizeMb;
         }
@@ -195,16 +229,18 @@ namespace EcorRouge.Archive.Utility.ViewModels
             var plugin = PluginsManager.Instance.GetPlugin(SelectedProviderIndex);
             if (plugin == null) return false;
 
+            bool encryptPropsOk = !_encryptFiles || !String.IsNullOrWhiteSpace(_keypairFileName);
+
             bool pluginPropsOk = plugin.VerifyProperties(GetProperties(_pluginProperties));
 
             if (SelectedConnectorType != null && SelectedConnectorType != SettingsFile.DefaultConnectorType)
             {
                 bool connectorProsOk = _connectorProperties.All(p => !string.IsNullOrWhiteSpace(p.Value));
-                return connectorProsOk && pluginPropsOk;
+                return connectorProsOk && pluginPropsOk && encryptPropsOk;
             }
             else
             {
-                return pluginPropsOk;
+                return pluginPropsOk && encryptPropsOk;
             }
         }
 
@@ -214,6 +250,56 @@ namespace EcorRouge.Archive.Utility.ViewModels
             {
                 SettingsFile.Instance.AddProviderProperty(settingProvider, value.Key, value.Value?.ToString());
             }
+        }
+
+        public void ChooseKeypair()
+        {
+            var ofd = new OpenFileDialog();
+            ofd.Filter = "Key files|*.key";
+
+            if(ofd.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    _ = ArchiverWorker.ImportKeypair(ofd.FileName, true, false);
+                    KeypairFileName = ofd.FileName;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error loading keypair: {ex.Message}");
+                    log.Error($"Error loading keypair: {ex.Message}", ex);
+                }
+            }
+
+            CanStart = CheckCanStart();
+        }
+
+        public void GenerateKeypair()
+        {
+            var sfd = new SaveFileDialog();
+            sfd.Filter = "Key files|*.key";
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    var rsa = RSA.Create();
+
+                    using (var file = new StreamWriter(sfd.FileName))
+                    {
+                        file.WriteLine(rsa.ExportRSAPrivateKeyPem());
+                        file.WriteLine(rsa.ExportRSAPublicKeyPem());
+                    }
+
+                    KeypairFileName = sfd.FileName;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error generating keypair: {ex.Message}");
+                    log.Error($"Error generating keypair: {ex.Message}", ex);
+                }
+            }
+
+            CanStart = CheckCanStart();
         }
     }
 }

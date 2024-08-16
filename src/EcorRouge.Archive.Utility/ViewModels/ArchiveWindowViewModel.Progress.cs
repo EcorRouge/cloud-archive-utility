@@ -19,7 +19,7 @@ using EcorRouge.Archive.Utility.Util;
 
 namespace EcorRouge.Archive.Utility.ViewModels
 {
-    public partial class MainWindowViewModel
+    public partial class ArchiveWindowViewModel
     {
         private bool _canCancelProcess = false;
         private string _archivingLabel;
@@ -250,6 +250,8 @@ namespace EcorRouge.Archive.Utility.ViewModels
             _savedState.PluginType = plugin?.ProviderName;
             _savedState.ConnectorType = sourceConnector?.ConnectorType;
             _savedState.DeleteFiles = DeleteFilesAfterUpload;
+            _savedState.EncryptFiles = EncryptFiles;
+            _savedState.KeypairFilename = KeypairFileName;
             _savedState.InputFileName = _fileName;
             _savedState.TotalFilesToArchive = _totalFilesToArchive;
             _savedState.TotalFilesSizeToArchive = _totalFileSizeToArchive;
@@ -363,7 +365,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
                 return;
 
             CanSelectSettings = false;
-            CanSelectProgress = false;
+            CanSelectProgress = false;            
             CanSelectFinish = true;
 
             TotalCompletedFilesLabel = $"Total files processed: {_worker.FilesProcessed}, errors: {_worker.FilesFailed}";

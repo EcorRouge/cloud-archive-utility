@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EcorRouge.Archive.Utility.ViewModels
 {
-    public partial class MainWindowViewModel
+    public partial class ArchiveWindowViewModel
     {
         private string _totalCompletedFilesLabel;
         private string _totalCompletedBytesLabel;

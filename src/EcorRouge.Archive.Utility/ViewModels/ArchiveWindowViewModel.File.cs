@@ -12,7 +12,7 @@ using Microsoft.Win32;
 
 namespace EcorRouge.Archive.Utility.ViewModels
 {
-    public partial class MainWindowViewModel
+    public partial class ArchiveWindowViewModel
     {
         private CancellationTokenSource _fileOpenCts;
 

@@ -15,9 +15,9 @@ using Microsoft.Toolkit.Mvvm.Input;
 
 namespace EcorRouge.Archive.Utility.ViewModels
 {
-    public partial class MainWindowViewModel : ObservableObject
+    public partial class ArchiveWindowViewModel : ObservableObject
     {
-        internal static readonly ILog log = LogManager.GetLogger(typeof(MainWindowViewModel));
+        internal static readonly ILog log = LogManager.GetLogger(typeof(ArchiveWindowViewModel));
 
         public const int TAB_SELECT_FILE = 0;
         public const int TAB_SETTINGS = 1;
@@ -33,7 +33,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
         private bool _canSelectProgress = false;
         private bool _canSelectFinish = false;
 
-        public string AppVersionString { get; } = "v." + typeof(MainWindowViewModel).Assembly.GetName().Version;
+        public string AppVersionString { get; } = "v." + typeof(ArchiveWindowViewModel).Assembly.GetName().Version;
 
         public RelayCommand SelectFileCommand { get; set; }
         public RelayCommand SelectSettingsCommand { get; set; }
@@ -107,7 +107,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
             _savedState = SavedState.Load();
         }
 
-        public MainWindowViewModel()
+        public ArchiveWindowViewModel()
         {
             SelectFileCommand = new RelayCommand(() =>
             {
