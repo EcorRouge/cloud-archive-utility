@@ -404,6 +404,8 @@ namespace EcorRouge.Archive.Utility
 
                         await DownloadArchiveWithRetries(_zipFileName, cancellationToken);
 
+                        _downloadProgress = 100;
+
                         try
                         {
                             if (entry.ZipFileName.EndsWith(".zip.enc"))
@@ -470,6 +472,8 @@ namespace EcorRouge.Archive.Utility
                         }
                     }
 
+                    _extractProgress = 100;
+
                     _filesProcessed++;
                     _bytesProcessed += entry.FileSize;
 
@@ -501,7 +505,15 @@ namespace EcorRouge.Archive.Utility
 
         private void _zipFile_ExtractProgress(object sender, ExtractProgressEventArgs e)
         {
-            _extractProgress = e.BytesTransferred * 100.0 / e.TotalBytesToTransfer;
+            if (e.TotalBytesToTransfer == 0)
+            {
+                _extractProgress = 100;
+            }
+            else
+            {
+                _extractProgress = e.BytesTransferred * 100.0 / e.TotalBytesToTransfer;
+            }
+
             _bytesExtracted = e.BytesTransferred;
 
             ExtractingProgress?.Invoke(this, null);

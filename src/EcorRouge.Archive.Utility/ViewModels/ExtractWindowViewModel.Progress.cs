@@ -120,6 +120,7 @@ namespace EcorRouge.Archive.Utility.ViewModels
         public void StartExtracting(bool saved)
         {
             ExtractingLabel = "Initializing...";
+            CanSelectViewFiles = false;
             CanSelectSettings = false;
             CanSelectProgress = true;
             SelectedPageIndex = TAB_PROGRESS;
@@ -244,12 +245,14 @@ namespace EcorRouge.Archive.Utility.ViewModels
                     DownloadingVisible = true;
                     break;
                 case ExtractState.Decrypting:
-                    DownloadProgress = 0;
+                    DownloadProgress = 100;
+                    ExtractProgress = 0;
                     DownloadingLabel = "Decrypting...";
                     DownloadingVisible = true;
                     break;
                 case ExtractState.Extracting:
-                    DownloadProgress = 0;
+                    DownloadProgress = 100;
+                    ExtractProgress = 0;
                     DownloadingLabel = "Extracting...";
                     DownloadingVisible = true;
                     break;
